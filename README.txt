@@ -1,6 +1,5 @@
 /*******README********/
 
-brian is the best
 
 347 project repo for all electronics development files.
 
