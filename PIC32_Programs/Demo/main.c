@@ -62,7 +62,7 @@ int main(void)
 
 	while(1)
 	{
-		if(reset == 1)
+    		if(reset == 1)
 		{
 			ClearLCDScreen();
 			sprintf(string,"A = Cmd button");
