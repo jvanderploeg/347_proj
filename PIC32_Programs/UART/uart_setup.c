@@ -9,3 +9,18 @@ void SetupUART(void)
     // no parity, 1 Stop bit
     U2STASET = 0x1400; // Enable Transmit and Receive
 }
+
+
+//lovingly lifted/modified from pic32-examples on Google Code
+void UART_putc(char c)
+{
+    while(U2STAbits.UTXBF); //wait until transmit buffer
+    U2TXREG = c;
+}
+
+void UART_puts(char *s)
+{
+    while(*s != '\0')
+        UART_putc(*s++);
+
+}
