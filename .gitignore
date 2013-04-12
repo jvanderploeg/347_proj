@@ -17,4 +17,12 @@ Desktop.ini
 ##############
 ## MPLAB X ignores
 ##############
-PIC32 Programs/Demo/demo.X/
+PIC32_Programs/Demo/demo.X/**
+PIC32_Programs/UART/UART.X/**
+
+
+##############
+## Compiled stuff
+##############
+*.o
+*.d
