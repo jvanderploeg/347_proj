@@ -58,16 +58,15 @@ int main(void)
 	LCDSetup();
 
 
+        ClearLCDScreen();
+        sprintf(string,"UART demo running");
+	WriteLCD(1,string);
 
-	// Start the timer
-	T1CONbits.ON = 1;
         
-        while(1) {
-            // send the tx 1's
-            U2TXREG = 0xFF;
-            wait(1000);
-            // send the tx 0's
-            U2TXREG = 0x00;
-            wait(2000);
-        }
+        // send the tx the dollar sign character
+        char* transmit = "$$$";
+        UART_puts(transmit);
+                   
+
+        
 }
