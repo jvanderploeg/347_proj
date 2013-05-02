@@ -7,6 +7,9 @@
 #include <p32xxxx.h>
 #include <sys/attribs.h>
 
+// Defines
+#define SYSCLK 80000000
+
 #define UP		1
 #define DOWN	0
 
