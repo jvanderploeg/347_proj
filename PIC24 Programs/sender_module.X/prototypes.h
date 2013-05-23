@@ -14,7 +14,10 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
+#include <p24EP256GP204.h>
 #include <xc.h>
 
 
@@ -24,7 +27,7 @@ extern "C" {
 #define LED2    PORTAbits.RA0
 #define LED3    PORTAbits.RA1
 #define LED4    PORTCbits.RC2
-
+#define SYSCLK 70000000
 
 
 

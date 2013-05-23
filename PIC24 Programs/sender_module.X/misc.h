@@ -14,8 +14,12 @@ extern "C" {
 
 void wait(int num);
 void setupLEDs(void);
-
-
+void setupUART2(void);
+void delay(int wait_time);
+void testLEDs(void);
+void configureOscillator(void);
+void configureINT(void);
+void configureT1(void);
 
 #ifdef	__cplusplus
 }
