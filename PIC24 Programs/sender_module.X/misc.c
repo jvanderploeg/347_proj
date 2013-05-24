@@ -68,15 +68,15 @@ void configureT1(void)
     // Not gated accumulation
     T1CONbits.TGATE = 0;
     // 1:1 scaling
-    T1CONbits.TCKPS = 0x00;
+    T1CONbits.TCKPS = 0x02;
     // Not synchronized to external clock
     T1CONbits.TSYNC = 0;
     // Select internal clock
     T1CONbits.TCS = 0;
     // Clear the timer register
     TMR1 = 0x0000;
-    // Set the period to 1000, gives a 50KHz toggle
-    PR1 = 50000;
+    // Pretty close to 1ms given the system clock
+    PR1 = 17500;
 
 //    Setup the interrupt
     // Set the priority of T1 interrupt to 4

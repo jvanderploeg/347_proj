@@ -50,7 +50,8 @@
 
 
 // defines and variables
-#define WAIT 1000
+#define WAIT 100
+#define LONG_WAIT 200
 
 char data;
 char send_data;
@@ -59,8 +60,10 @@ char string[32];
 int next;
 int read_index;
 int timer;
-int wait_hold;
-int timer_en;
+int timer_start;
+int timer_running;
+int timer_expired;
+int wait_time = WAIT;
 
 
 /*
@@ -79,6 +82,12 @@ int main(int argc, char** argv)
     next = 0;
 
 
+    configureOscillator();
+    configureINT();
+    setupUART2();
+    configureUART2pins();
+    configureT1();
+
     setupLEDs();
 
     LED0 = 1;
@@ -87,79 +96,73 @@ int main(int argc, char** argv)
     LED3 = 1;
     LED4 = 1;
 
-    configureOscillator();
-    configureINT();
-    setupUART2();
-    configureUART2pins();
-    configureT1();
 
     // Turn on the timer
     T1CONbits.TON = 1;
 
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
+    while(1) {
+        // Wait on startup
+        timer_start = 1;
+        while(timer_expired == 0);
 
+        // Clear the buffer
+        memset(string,0,32);
+        // Reset index
+        read_index = 0;
 
-//    while(1)
-//    {
-//        for(i=0;i<12;i++)
-//        {
-//           SerialTransmit("H");
-//        }
-//    }
+        // send dollar signs to enter command mode
+        char send1[] = "$$$";
+        SerialTransmit(send1);
 
-        // Reset the string
-    memset(string,0,32);
-    // Reset index
-    read_index = 0;
+        // TODO: make this only try for a certain amount of time using the timer
+        while(strcmp(string,"CMD\r\n") != 0);
 
-    // send dollar signs to enter command mode
-    char send1[] = "$$$";
-    SerialTransmit(send1);
+        SerialTransmit("GB\n");
+        // wait for response
+        while(string[0] == '\0');
 
-    // Wait until the timer has loaded
-//    verify_time = 0;
-//    verify_ack = 1;
-//    while(verify_ack != 0);
+        wait(1000);
 
-    // TODO: make this only try for a certain amount of time using the timer
-    while(strcmp(string,"CMD\r\n") != 0);
+        char dev_id[15];
+        strcpy(dev_id,string);
 
-
-
-    wait(100000);
-
-    // Put the bluetooth into command mode
-    SerialTransmit("C\n");
-    next = 0;
-
-    while(next != 1);
-
-    if(string[read_index-1] == 'T') // We have the CMD response
-    {
+        timer_start = 1;
         LED0 = 0;
-        LED1 = 1;
-    }
-    else                            // We did not get the appropriate response
-    {
+        while(timer_expired == 0);
         LED0 = 1;
+
+        // Reset the buffer
+        memset(string,0,32);
+        // Reset index
+        read_index = 0;
+
+        // Put the bluetooth into command mode
+        SerialTransmit("C\n");
+
+        while(strcmp(string,"TRYING\r\n") != 0);
+
+        wait_time = LONG_WAIT;
+
+        timer_start = 1;
         LED1 = 0;
+        while(timer_expired == 0);
+        LED1 = 1;
+
+        // Send ID over serial
+        SerialTransmit(dev_id);
+
+        // Wait until the timer has loaded
+        timer_start = 1;
+        LED2 = 0;
+        while(timer_expired != 0);
+
+        while((strcmp(string,"CMD\r\n") != 0) && verify_time == 0);
+
+
+        while(strcmp(string,"TRYING\r\n") != 0);
+
+
     }
-
-    while(1)
-    {
-        for(i=0;i<12;i++)
-        {
-           SerialTransmit("H");
-        }
-
-
-    }
-
-
-    testLEDs();
-
     return (EXIT_SUCCESS);
 }
 
@@ -167,21 +170,24 @@ void _ISR _T1Interrupt(void)
 {
     LED4 = !LED4;
 
-    if(timer_en == 1)
+    if(timer_start == 1)
     {
-        timer = WAIT;
-        timer_en = 0;
-        wait_hold = 0;
+        timer = wait_time;
+        timer_start = 0;
+        timer_running = 1;
+        timer_expired = 0;
     }
     else if(timer > 0)
     {
         timer--;
-        wait_hold = 0;
+        timer_running = 1;
+        timer_expired = 0;
     }
     else
     {
         timer = 0;
-        wait_hold = 1;
+        timer_running = 0;
+        timer_expired = 1;
     }
 
     // Clear the interrupt flag
