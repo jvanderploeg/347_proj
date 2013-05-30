@@ -11,6 +11,9 @@
 #include "uart_setup.h"
 #include <p24Exxxx.h>
 
+// enumerated type for state machine
+enum sender_state{connecting, connected_waiting, command_active};
+enum sender_state system_state;
 
 // PIC24EP256GP204 Configuration Bit Settings
 
@@ -72,13 +75,7 @@ int timer;
 int wait_hold;
 int timer_en;
 
-void clear_recieve_buffer() {
-    // Clear the UART recieve buffer
-    memset(string,0,32);
-
-    // Clear the UART recieve index
-    read_index = 0;
-}
+void clear_recieve_buffer(void);
 
 int main(int argc, char** argv)
 {
@@ -123,6 +120,9 @@ int main(int argc, char** argv)
 
     // send dollar signs to enter command mode
     char send1[] = "$$$";
+
+
+    // KLUDGE:
     SerialTransmit(send1);
 
     // TODO: make this only try for a certain amount of time using the timer
@@ -147,19 +147,23 @@ int main(int argc, char** argv)
     strcpy(dev_id,string);
 
     while(1) {
-        switch(current_state){
+        switch(system_state){
             case connecting:
+                /*
+                 * State for connecting to the reciever via BT.
+                 * 
+                 * Handshaking works as follows:
+                 * 1. Send the receiver our BT ID, which we grabbed from the 
+                 *    BT chip before entering the state machine
+                 * 2. Expect the receiver to send it's BT ID back. It's 
+                 *    hardcoded in here.
+                 * 
+                 * When it works, we switch to the connected state. Otherwise, 
+                 * retry. Maybe go to an error case. Haven't written that yet.
+                 */
 
-                // Reset the UART recieve buffer
-                clear_recieve_buffer();
-
-                // enter command mode
-                char send1[] = "$$$";
-                SerialTransmit(send1);
-
-                // wait for CMD response from BT chip
-                // TODO: make this only try for a certain amount of time using the timer
-                while(strcmp(string,"CMD\r\n") != 0);
+                // Assuming we're already in CMD mode from pre-state
+                // machine stuff..
 
                 // Reset the UART recieve buffer
                 clear_recieve_buffer();
@@ -202,10 +206,15 @@ int main(int argc, char** argv)
                 LED3 = 1;
                 
                 // Switch to connected state
-                current_state = connected_waiting;
+                system_state = connected_waiting;
 
                 wait(100);
             case connected_waiting:
+                /*
+                 * State for when the BT is connected. Poll the command button,
+                 * change state if warranted, rinse and repeat.
+                 */
+
                 // Reset the UART recieve buffer
                 clear_recieve_buffer();
 
@@ -275,13 +284,21 @@ int main(int argc, char** argv)
                 timer_en = 1;
                 while(wait_hold == 0);
                 LED0 = 1;
+
+            case command_active:
+                /*
+                 * State for when the command button is pressed.
+                 * Check the other buttons, fire the necessary command over BT,
+                 * wait for ack for a certain amount of time, and retry.
+                 */
+
+                //placeholder
+                wait(100);
         }
     }
 
     return (EXIT_SUCCESS);
 }
-
-
 
 
 void _ISR _T1Interrupt(void)
@@ -328,4 +345,10 @@ void _ISR _U2RXInterrupt(void)
     IFS1bits.U2RXIF = 0;
 }
 
+void clear_recieve_buffer() {
+    // Clear the UART recieve buffer
+    memset(string,0,32);
 
+    // Clear the UART recieve index
+    read_index = 0;
+}
