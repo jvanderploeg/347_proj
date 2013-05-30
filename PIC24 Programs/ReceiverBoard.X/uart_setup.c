@@ -1,6 +1,6 @@
 // UART setup file
 
-#include "./prototypes.h"
+#include "prototypes.h"
 #include <string.h>
 
 

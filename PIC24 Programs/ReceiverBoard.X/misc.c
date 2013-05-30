@@ -45,9 +45,9 @@ void configureOscillator(void)
     wait(100);
 
     if(OSCCONbits.OSWEN == 0)
-        LED3 = 0;
+        Left_Blink = 0;
     else
-        LED3 = 1;
+        Left_Blink = 1;
 */
 
 }
@@ -106,19 +106,15 @@ int UART2Transmit(const char *buffer)
     return 0;
 }
 
-
+//TODO: What does this function do?
 void setupLEDs(void)
 {
-    // Configure them as digital outputs
-    ANSELAbits.ANSA0 = 0;
-    ANSELAbits.ANSA1 = 0;
 
-    // Set them to outputs
-    TRISAbits.TRISA10 = 0;
-    TRISAbits.TRISA7 = 0;
-    TRISAbits.TRISA0 = 0;
-    TRISAbits.TRISA1 = 0;
-    TRISCbits.TRISC2 = 0;
+    // Set pins 2-5 to outputs
+    TRISCbits.TRISC6 = 0;
+    TRISCbits.TRISC7 = 0;
+    TRISCbits.TRISC8 = 0;
+    TRISCbits.TRISC9 = 0;
 
 }
 
@@ -139,81 +135,67 @@ void delay(int wait_time)
 void testLEDs(void)
 {
     int i;
-    LED0 = 0;
+    Right_Head = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED0 = 1;
+    Right_Head = 1;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED0 = 0;
+    Right_Head = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED1 = 0;
+    Left_Head = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED1 = 1;
+    Left_Head = 1;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED1 = 0;
+    Left_Head = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED2 = 0;
+    Right_Blink = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED2 = 1;
+    Right_Blink = 1;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED2 = 0;
+    Right_Blink = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED3 = 0;
+    Left_Blink = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED3 = 1;
+    Left_Blink = 1;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED3 = 0;
+    Left_Blink = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
 
-    LED4 = 0;
-
-    for(i=0;i<1000;i++)
-        wait(1000);
-
-    LED4 = 1;
-
-    for(i=0;i<1000;i++)
-        wait(1000);
-
-    LED4 = 0;
-
-    for(i=0;i<1000;i++)
-        wait(1000);
 }
 
 

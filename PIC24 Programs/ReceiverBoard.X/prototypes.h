@@ -17,18 +17,17 @@
 #include <p24EP256GP204.h>
 #include <xc.h>
 
-#define LED0    PORTAbits.RA0
-#define LED1    PORTAbits.RA1
-#define LED2    PORTCbits.RC2
-#define LED3    PORTAbits.RA10
-#define LED4    PORTAbits.RA7
+
+#define Right_Head      PORTCbits.RC6
+#define Left_Head       PORTCbits.RC7
+#define Right_Blink     PORTCbits.RC8
+#define Left_Blink      PORTCbits.RC9
+
+
 
 
 #define SYSCLK 70000000
 
-// enumerated type for state machine
-enum sender_state{connecting, connected_waiting, command_active};
-enum sender_state current_state;
 
 #endif	/* PROTOTYPES_H */
 
