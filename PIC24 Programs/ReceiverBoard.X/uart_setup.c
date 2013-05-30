@@ -62,8 +62,8 @@ void setupUART2(void)
 
 }
 
+//TODO: What does this stuff mean
 /*
-
 Default PORT    000000  RPn tied to Default Pin
 U1TX            000001  RPn tied to UART1 Transmit
 U2TX            000011  RPn tied to UART2 Transmit
@@ -87,11 +87,11 @@ C4OUT           110010  RPn tied to Comparator Output 4
 
 void configureUART2pins(void)
 {
-    //RP43 will be the UART2 transmit
-    //RPI44 will be the UART2 receive
+    //RPI24 will be the UART2 receive
+    //RP36 will be the UART2 transmit
 
-     RPINR19bits.U2RXR = 0x2C;      //010   1100 - RPI44
-     RPOR4bits.RP43R = 0x03;        // 00   0011 - Maps to UART2TX
+     RPINR19bits.U2RXR = 0x18;      //001   1000 - RPI44
+     RPOR1bits.RP36R = 0x03;        // 00   0011 - Maps to UART2TX
 }
 
 
