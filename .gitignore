@@ -20,6 +20,10 @@ Desktop.ini
 PIC32_Programs/Demo/demo.X/**
 PIC32_Programs/UART/UART.X/**
 
+##############
+## Files from merges and shit
+##############
+*.orig
 
 ##############
 ## Compiled stuff
