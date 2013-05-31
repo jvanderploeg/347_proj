@@ -122,20 +122,6 @@ void setupLEDs(void)
 
 }
 
-
-
-void delay(int wait_time)
-{
-    // makes the program wait a given number of milliseconds
-
-    // length of a clock cycle in ms
-    float clk_cycle = (1/SYSCLK)*1000;
-
-    int cycles = floor(wait_time/clk_cycle);
-
-    wait(cycles);
-}
-
 void testLEDs(void)
 {
     int i;
