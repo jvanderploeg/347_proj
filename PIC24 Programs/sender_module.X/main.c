@@ -77,6 +77,7 @@ int timer_en;
 
 void clear_recieve_buffer(void);
 void delay(int wait_ms);
+int expect_response(char* resp, int timeout_ms);
 
 int main(int argc, char** argv)
 {
@@ -322,6 +323,33 @@ void delay(int wait_ms) {
 
     return;
 
+}
+
+int expect_response(char* resp, int timeout_ms) {
+    int match_sentinel = 0; // signifies whether we got the response we want
+
+    // calculate number of timer "ticks" to put on the countdown
+    timer = timeout_ms/16;
+
+    // clear the "timer is done" flag
+    wait_hold = 0;
+
+    // start the countdown (see the timer interrupt to see how this works)
+    timer_en = 1;
+
+
+    // wait for either the response to come back or the timer to run out
+    while((match_sentinel == 0) || (wait_hold == 0)) {
+        if(strcmp(string,resp) == 0) {
+            match_sentinel = 1;
+        }
+        else {
+            match_sentinel = 0;
+        }   
+    };
+
+    // if we got what we wanted, return 1, otherwise return 0.
+    return match_sentinel;
 }
 
 void clear_recieve_buffer(void) {
