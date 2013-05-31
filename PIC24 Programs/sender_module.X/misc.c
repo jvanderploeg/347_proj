@@ -107,9 +107,6 @@ int UART2Transmit(const char *buffer)
 }
 
 
-// TODO: CHANGE these PINOUTS
-
-/*
 void setupLEDs(void)
 {
     // Configure them as digital outputs
@@ -124,7 +121,7 @@ void setupLEDs(void)
     TRISCbits.TRISC2 = 0;
 
 }
-*/
+
 
 
 void delay(int wait_time)
