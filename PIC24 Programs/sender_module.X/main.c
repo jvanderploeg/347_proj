@@ -76,6 +76,7 @@ int wait_hold;
 int timer_en;
 
 void clear_recieve_buffer(void);
+void delay(int wait_ms);
 
 int main(int argc, char** argv)
 {
@@ -295,6 +296,32 @@ void _ISR _U2RXInterrupt(void)
 
     // Clear the RX interrupt Flag
     IFS1bits.U2RXIF = 0;
+}
+
+void delay(int wait_ms) {
+    /*
+     * Uses the timer interrupt to wait a given number of milliseconds.
+     * Must be a multiple of 16ms (which is the timer rate), or it will
+     * be rounded down to the nearest 16ms multiple.
+     *
+     * NOTE: this is not highly precise. It's pretty close, but allow a little
+     * leeway if precision of your wait times are critical
+     */
+
+    // calculate number of timer "ticks" to put on the countdown
+    timer = wait_ms/16;
+
+    // clear the "timer is done" flag
+    wait_hold = 0;
+
+    // start the countdown (see the timer interrupt to see how this works)
+    timer_en = 1;
+
+    // wait til the countdown is done
+    while(wait_hold == 0);
+
+    return;
+
 }
 
 void clear_recieve_buffer(void) {
