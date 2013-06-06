@@ -1,0 +1,12 @@
+Gamma Handle Update:
+
+Accomplished:
+	- Final main board and receiver board ordered
+	- Parts ordered
+	- Handle assembled
+	- Able to send commands and receive ACKs in software
+Not Accomplished:
+
+Goals
+	- Develop software for reading battery voltage level
+	- Continue developing software
