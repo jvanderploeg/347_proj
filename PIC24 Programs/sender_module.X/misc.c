@@ -162,16 +162,19 @@ void setupADC1(void){
      * connected to the S&H amplifiers. The ADCSSH/L registers select inputs to 
      * be sequentially scanned." */
 
+    // turn off scanning for now
+    // note to self, channel scanning could be badass for our purposes
+    AD1CON2bits.CSCNA = 0;
+    
+    // AN8 is the battery monitor.
+    AD1CHS0bits.CH0SA = 8;
 
     //7. Select manual or auto-sampling.
-    // ask jake. set to manual for now
+    // set to manual
     AD1CON1bits.ASAM = 0;
 
-
     //8. Select the conversion trigger and sampling time.
-    // what do we want to use for these? ask jake
-    // set auto conversion
-
+    // don't care, we're sampling manually
 
     //9. Select how the data format for the conversion results must be stored in the buffer (ADxCON1<9:8>).
     // unsigned integer
@@ -193,8 +196,7 @@ void setupADC1(void){
     //a) Clear the ADxIF bit
     //b) Select the interrupt priority (ADxIP<2:0)
     //c) Set the ADxIE bit
-    
-
+    // no need, manual
 
     //14. Configure the DMA channel (if needed).
     // no need
@@ -203,8 +205,28 @@ void setupADC1(void){
     // no need
 
     //16. Turn on the ADC module (ADxCON1<15>).
+    AD1CON1bits.ADON = 1;
+}
 
-    
+void readADC(int* adc_buff){
+    // Start sampling the ADC
+    AD1CON1bits.SAMP = 1;
+
+    // Wait for acq time
+    wait(100);
+
+    // End sampling the ADC
+    AD1CON1bits.SAMP = 0;
+
+    // Wait for conversion
+    while(AD1CON1bits.DONE != 1);
+
+    // Manually clear the done bit
+    AD1CON1bits.DONE = 0;
+
+    *adc_buff = ADC1BUF0;
+
+    return;
 }
 
 void testLEDs(void)
