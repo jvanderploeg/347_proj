@@ -107,9 +107,6 @@ int UART2Transmit(const char *buffer)
 }
 
 
-// TODO: CHANGE these PINOUTS
-
-/*
 void setupLEDs(void)
 {
     // Configure them as digital outputs
@@ -123,20 +120,6 @@ void setupLEDs(void)
     TRISAbits.TRISA1 = 0;
     TRISCbits.TRISC2 = 0;
 
-}
-*/
-
-
-void delay(int wait_time)
-{
-    // makes the program wait a given number of milliseconds
-
-    // length of a clock cycle in ms
-    float clk_cycle = (1/SYSCLK)*1000;
-
-    int cycles = floor(wait_time/clk_cycle);
-
-    wait(cycles);
 }
 
 void testLEDs(void)

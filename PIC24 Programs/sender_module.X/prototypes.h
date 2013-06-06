@@ -26,9 +26,5 @@
 
 #define SYSCLK 70000000
 
-// enumerated type for state machine
-enum sender_state{connecting, connected_waiting, command_active};
-enum sender_state current_state;
-
 #endif	/* PROTOTYPES_H */
 
