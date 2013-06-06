@@ -147,7 +147,9 @@ void setupADC1(void){
 
     //4. Determine how inputs must be allocated to S&H channels (ADxCHS0<15:0> and
     //ADxCHS123<15:0>).
-    // choose which port to sample from
+    // AN7 is the battery monitor on the old board.
+    // AN8 is the battery monitor on the new board.
+    AD1CHS0bits.CH0SA = 7;
 
 
     //5. Determine how many S&H channels must be used (ADxCON2<9:8>).
@@ -166,9 +168,6 @@ void setupADC1(void){
     // note to self, channel scanning could be badass for our purposes
     AD1CON2bits.CSCNA = 0;
     
-    // AN8 is the battery monitor.
-    AD1CHS0bits.CH0SA = 8;
-
     //7. Select manual or auto-sampling.
     // set to manual
     AD1CON1bits.ASAM = 0;
