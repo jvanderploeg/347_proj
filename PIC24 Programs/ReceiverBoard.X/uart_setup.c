@@ -62,7 +62,6 @@ void setupUART2(void)
 
 }
 
-//TODO: What does this stuff mean
 /*
 Default PORT    000000  RPn tied to Default Pin
 U1TX            000001  RPn tied to UART1 Transmit
