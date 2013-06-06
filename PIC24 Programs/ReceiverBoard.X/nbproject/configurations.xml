@@ -6,6 +6,7 @@
                    projectFiles="true">
       <itemPath>uart_setup.h</itemPath>
       <itemPath>prototypes.h</itemPath>
+      <itemPath>misc.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -16,6 +17,7 @@
                    projectFiles="true">
       <itemPath>main.c</itemPath>
       <itemPath>uart_setup.c</itemPath>
+      <itemPath>misc.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
