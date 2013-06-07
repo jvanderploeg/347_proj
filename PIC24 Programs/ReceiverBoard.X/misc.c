@@ -56,36 +56,26 @@ void configureHorn(void)
 {
     //TODO: make sure this is a digital output
     TRISBbits.TRISB9 = 0;
+    Horn = 0;
 }
 
-void configurePWM(void)
+void soundHorn(void)
 {
-    //TODO: correct period value, peripheral clock, waveform, trigger, and sync.
-
-    //Select Pin 42 RP38/RB6
-    RPOR2bits.RP38R = 0x10;
-
-    /* It is a good practice to initially clear the control bits */
-    OC1CON1 = 0;
-    OC1CON2 = 0;
-    /* The peripheral clock is selected as the clock input to the OC
-        module */
-    OC1CON1bits.OCTSEL = 0x07;
-
-    OC1R = 1000;  /* This is just a typical number, user must calculate based on
-                    the waveform requirements and the system clock */
-
-    //This determines the period
-    OC1RS = 2000;
-    //PWM Edge Detection Mode
-    OC1CON1bits.OCM = 0x6;
-    //Ignore Fault Mode
-    OC1CON1bits.ENFLTA = 0;
-    OC1CON1bits.ENFLTB = 0;
-    OC1CON2bits.SYNCSEL = 0x1F; /* No trigger or sync source is selected */
-
+    Horn = 0;
+    delay(1000);
+    Horn = 0;
+    delay(1000);
 
 }
+
+
+void slowWipe(void)
+{
+    Wipers = 700;
+    delay(10000000);
+    Wipers = 350;
+}
+
 
 void configureINT(void)
 {

@@ -8,6 +8,8 @@
 #include "uart_setup.h"
 #include "prototypes.h"
 #include <p24Exxxx.h>
+#include "misc.h"
+#include "timersetup.h"
 
 // PIC24EP256GP204 Configuration Bit Settings
 
@@ -55,6 +57,15 @@ int main(int argc, char** argv) {
     configureUART2pins();
     configureT1();
     setupLEDs();
+    configureHorn();
+    timer2setupPWM();
+
+
+
+    while(1)
+    {
+        testLEDs();
+    }
 
     return(0);
 }
