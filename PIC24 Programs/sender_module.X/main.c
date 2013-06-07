@@ -91,6 +91,7 @@ int main(int argc, char** argv)
     configureUART2pins();
     configureT1();
     setupLEDs();
+    setupButtons();
     setupADC1();
 
     LED0 = 1;
@@ -99,11 +100,14 @@ int main(int argc, char** argv)
     LED3 = 1;
     LED4 = 1;
 
+    // make sure gate is closed
+    BATTERY_CHECK_GATE = 0;
+
+
     // test ADC
-    int voltage = 0;
-    
+
     while(1){
-        readADC(&voltage);
+        checkCommand();
     };
 
 

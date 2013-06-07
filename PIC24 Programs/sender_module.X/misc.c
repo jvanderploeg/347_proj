@@ -109,7 +109,15 @@ int UART2Transmit(const char *buffer)
 
 void setupLEDs(void)
 {
-    // Configure them as digital outputs
+    TRISBbits.TRISB13 = 0; // port D1 - not soldered at the moment
+    TRISAbits.TRISA10 = 0; // port D2
+    TRISAbits.TRISA7  = 0; // port D3 - not soldered at the moment
+    TRISBbits.TRISB14 = 0; // port D4
+    TRISBbits.TRISB15 = 0; // port D5
+
+    // Following code is for old prototype board:
+    /*
+     // Configure them as digital outputs
     ANSELAbits.ANSA0 = 0;
     ANSELAbits.ANSA1 = 0;
 
@@ -119,6 +127,29 @@ void setupLEDs(void)
     TRISAbits.TRISA0 = 0;
     TRISAbits.TRISA1 = 0;
     TRISCbits.TRISC2 = 0;
+     */
+}
+
+void setupButtons(void){
+    // setup AN0
+    TRISAbits.TRISA0 = 1;
+    ANSELAbits.ANSA0 = 1;
+
+    // setup AN1/RA1
+    TRISAbits.TRISA1 = 1;
+    ANSELAbits.ANSA1 = 1;
+
+    // setup AN4/RB2
+    TRISBbits.TRISB2 = 1;
+    ANSELBbits.ANSB2 = 1;
+
+    // setup AN5/RB3
+    TRISBbits.TRISB3 = 1;
+    ANSELBbits.ANSB3 = 1;
+
+    // setup AN6/RC0
+    TRISCbits.TRISC0 = 1;
+    ANSELCbits.ANSC0 = 1;
 
 }
 
@@ -207,6 +238,18 @@ void setupADC1(void){
     AD1CON1bits.ADON = 1;
 }
 
+void changeADCinput(int an_pin) {
+
+    // turn off ADC
+    AD1CON1bits.ADON = 0;
+
+    // change to specified pin
+    AD1CHS0bits.CH0SA = an_pin;
+
+    // Turn ADC back on (ADxCON1<15>).
+    AD1CON1bits.ADON = 1;
+}
+
 void readADC(int* adc_buff){
     // Start sampling the ADC
     AD1CON1bits.SAMP = 1;
@@ -224,6 +267,36 @@ void readADC(int* adc_buff){
     AD1CON1bits.DONE = 0;
 
     *adc_buff = ADC1BUF0;
+
+    return;
+}
+
+void checkBattery(void) {
+    // set pin to output
+    TRISCbits.TRISC9 = 0;
+
+    // flip the npn transistor open
+    BATTERY_CHECK_GATE = 1;
+
+    // switch ADC to proper pin
+    changeADCinput(8);
+
+    // read from the ADC
+    int adc_reading = -1;
+    readADC(&adc_reading);
+
+    // calculate the voltage
+    // 4095 is 3.3V (reference)
+    // ((ADC reading / 4095) * 2 * 3.3)
+    // TODO: this doesn't work rn. don't know why.
+    //
+    //    int voltage;
+    //    voltage = (adc_reading/4095.0) * 2.0 * 3.3;
+
+
+
+    // flip the npn transistor back closed
+    BATTERY_CHECK_GATE = 0;
 
     return;
 }
@@ -307,5 +380,36 @@ void testLEDs(void)
     for(i=0;i<1000;i++)
         wait(1000);
 }
+void checkCommand(void){
+    int state = 0;
 
+    // check AN0 (port P7)
+    changeADCinput(0);
+    
+    int adc_read = -1;
+    readADC(&adc_read);
+
+    if(adc_read > 200){
+        state++;
+    }
+    
+    // check AN4 (port P4)
+    changeADCinput(4);
+
+    adc_read = -1;
+    readADC(&adc_read);
+
+    if((adc_read > 200) && (state > 0)){
+        state++;
+    }
+
+    if(state == 2){
+        LED1 = 0;
+    }
+    else {
+        LED1 = 1;
+    }
+
+    return;
+}
 
