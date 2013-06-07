@@ -5,11 +5,10 @@
  * Created on May 2, 2013, 10:29 PM
  */
 
-
 #include "prototypes.h"
 #include "misc.h"
 #include "uart_setup.h"
-#include <p24Exxxx.h>
+#include "adc_setup.h"
 
 // enumerated type for state machine
 enum sender_state{connecting, connected_waiting, command_active};
@@ -75,10 +74,6 @@ int timer;
 int wait_hold;
 int timer_en;
 
-void clear_recieve_buffer(void);
-void delay(int wait_ms);
-int expect_response(char* resp, int timeout_ms);
-
 int main(int argc, char** argv)
 {
 
@@ -102,10 +97,6 @@ int main(int argc, char** argv)
     // test ADC
     int voltage = 0;
     
-    while(1){
-        readADC(&voltage);
-    };
-
 
     // Turn on the timer
     T1CONbits.TON = 1;
@@ -329,114 +320,4 @@ void delay(int wait_ms) {
 
 }
 
-int expect_response(char* resp, int timeout_ms) {
-    int match_sentinel = 0; // signifies whether we got the response we want
-
-    // calculate number of timer "ticks" to put on the countdown
-    timer = timeout_ms/16;
-
-    // clear the "timer is done" flag
-    wait_hold = 0;
-
-    // start the countdown (see the timer interrupt to see how this works)
-    timer_en = 1;
-
-
-    // wait for either the response to come back or the timer to run out
-    while((match_sentinel == 0) || (wait_hold == 0)) {
-        if(strcmp(string,resp) == 0) {
-            match_sentinel = 1;
-        }
-        else {
-            match_sentinel = 0;
-        }   
-    };
-
-    // if we got what we wanted, return 1, otherwise return 0.
-    return match_sentinel;
-}
-
-void clear_recieve_buffer(void) {
-    // Clear the UART recieve buffer
-    memset(string,0,32);
-
-    // Clear the UART recieve index
-    read_index = 0;
-}
-
-void demo_code(void) {
-    // this is Jake's code that sends the receiver 1, waits for ack and such,
-    // sends the reciever 2, etc.
-    
-	// Reset the UART recieve buffer
-    clear_recieve_buffer();
-
-    SerialTransmit("1\0");
-
-    // Use the timer to wait for a couple seconds.
-    // LED turns off after time's up.
-    // TODO: acutally poll connection state and retry if necessary
-    LED3 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    // Turn off LED wait again
-    LED3 = 1;
-
-    // wait for ACK from reciever
-    while(strcmp(string,"ACK") != 0);
-
-    // Use the timer to wait for a couple seconds.
-    // LED turns off after time's up.
-    // TODO: acutally poll connection state and retry if necessary
-    LED0 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    LED0 = 1;
-
-    // Reset the UART recieve buffer
-    clear_recieve_buffer();
-
-    SerialTransmit("2\0");
-
-    // We send when the LED turns on
-    LED3 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    // Turn off LED wait again
-    LED3 = 1;
-
-    // wait for ACK from reciever
-    while(strcmp(string,"ACK") != 0);
-
-    LED0 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    LED0 = 1;
-
-    // Reset the UART recieve buffer
-    clear_recieve_buffer();
-
-    SerialTransmit("3\0");
-
-    // We send when the LED turns on
-    LED3 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    // Turn off LED wait again
-    LED3 = 1;
-
-    while(strcmp(string,"ACK") != 0);
-
-    LED0 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    LED0 = 1;
-                
-}
 

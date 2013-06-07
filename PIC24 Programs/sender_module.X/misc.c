@@ -1,4 +1,6 @@
 #include "prototypes.h"
+#include "misc.h"
+#include "uart_setup.h"
 
 #define Baud2BRG(desired_baud)      ( (SYSCLK / (16*desired_baud))-1)
 
@@ -122,112 +124,6 @@ void setupLEDs(void)
 
 }
 
-void setupADC1(void){
-    // config steps from ADC datasheet
-
-    // turn off ADC
-    AD1CON1bits.ADON = 0;
-
-    //1. Select 10-bit or 12-bit mode (ADxCON1<10>).
-    AD1CON1bits.AD12B = 1;
-
-    //2. Select the voltage reference source to match the expected range on the analog inputs
-    //(ADxCON2<15:13>).
-    //AVDD is ref high, AVss is ref low
-    AD1CON2bits.VCFG = 0x000;
-
-    //3. Select the analog conversion clock to match the desired data rate with the processor clock
-    //(ADxCON3<7:0>).
-    // use system clock
-    AD1CON3bits.ADRC = 0;
-
-    // run at instruction clock rate
-    AD1CON3bits.ADCS = 0x00000000;
-
-
-    //4. Determine how inputs must be allocated to S&H channels (ADxCHS0<15:0> and
-    //ADxCHS123<15:0>).
-    // AN7 is the battery monitor on the old board.
-    // AN8 is the battery monitor on the new board.
-    AD1CHS0bits.CH0SA = 7;
-
-
-    //5. Determine how many S&H channels must be used (ADxCON2<9:8>).
-    // set to channel 0 only
-    AD1CON2bits.CHPS = 0x00;
-
-
-    //6. Determine how sampling must occur (ADxCON1<3>, ADxCSSH<15:0> and
-    //ADxCSSL<15:0>).
-    // no need to set ADxCON1 in 12-bit mode
-    /* "The ADxCHS123 and ADxCHS0 registers select the input pins to be 
-     * connected to the S&H amplifiers. The ADCSSH/L registers select inputs to 
-     * be sequentially scanned." */
-
-    // turn off scanning for now
-    // note to self, channel scanning could be badass for our purposes
-    AD1CON2bits.CSCNA = 0;
-    
-    //7. Select manual or auto-sampling.
-    // set to manual
-    AD1CON1bits.ASAM = 0;
-
-    //8. Select the conversion trigger and sampling time.
-    // don't care, we're sampling manually
-
-    //9. Select how the data format for the conversion results must be stored in the buffer (ADxCON1<9:8>).
-    // unsigned integer
-    AD1CON1bits.FORM = 0x00;
-
-    //10. Set the ADDMAEN bit to configure the ADC module to use DMA.
-    // turn off DMA
-    AD1CON4bits.ADDMAEN = 0x0;
-
-    //11. Select the interrupt rate or DMA Buffer Pointer increment rate (ADxCON2<9:5>).
-    // how frequently do we want this thing to fire an interrupt?
-    // set to every sample for now
-    AD1CON2bits.SMPI = 0x0000;
-
-    //12. Select the number of samples in the DMA buffer for each ADC module input (ADxCON4<2:0>).
-    // no need to set, dma is turned off
-
-    //13. Configure the ADC interrupt (if required):
-    //a) Clear the ADxIF bit
-    //b) Select the interrupt priority (ADxIP<2:0)
-    //c) Set the ADxIE bit
-    // no need, manual
-
-    //14. Configure the DMA channel (if needed).
-    // no need
-
-    //15. Enable the DMA channel.
-    // no need
-
-    //16. Turn on the ADC module (ADxCON1<15>).
-    AD1CON1bits.ADON = 1;
-}
-
-void readADC(int* adc_buff){
-    // Start sampling the ADC
-    AD1CON1bits.SAMP = 1;
-
-    // Wait for acq time
-    wait(100);
-
-    // End sampling the ADC
-    AD1CON1bits.SAMP = 0;
-
-    // Wait for conversion
-    while(AD1CON1bits.DONE != 1);
-
-    // Manually clear the done bit
-    AD1CON1bits.DONE = 0;
-
-    *adc_buff = ADC1BUF0;
-
-    return;
-}
-
 void testLEDs(void)
 {
     int i;
@@ -307,5 +203,122 @@ void testLEDs(void)
     for(i=0;i<1000;i++)
         wait(1000);
 }
+
+
+int expect_response(char* resp, int timeout_ms)
+{
+    int match_sentinel = 0; // signifies whether we got the response we want
+
+    // calculate number of timer "ticks" to put on the countdown
+    timer = timeout_ms/16;
+
+    // clear the "timer is done" flag
+    wait_hold = 0;
+
+    // start the countdown (see the timer interrupt to see how this works)
+    timer_en = 1;
+
+
+    // wait for either the response to come back or the timer to run out
+    while((match_sentinel == 0) && (wait_hold == 0))
+    {
+        if(strcmp(string,resp) == 0)
+            match_sentinel = 1;
+
+        else
+            match_sentinel = 0;
+
+    }
+
+    // if we got what we wanted, return 1, otherwise return 0.
+    return match_sentinel;
+}
+
+void clear_recieve_buffer(void)
+{
+    // Clear the UART recieve buffer
+    memset(string,0,32);
+
+    // Clear the UART recieve index
+    read_index = 0;
+}
+
+void demo_code(void)
+{
+    // this is Jake's code that sends the receiver 1, waits for ack and such,
+    // sends the reciever 2, etc.
+
+	// Reset the UART recieve buffer
+    clear_recieve_buffer();
+
+    SerialTransmit("1\0");
+
+    // Use the timer to wait for a couple seconds.
+    // LED turns off after time's up.
+    // TODO: acutally poll connection state and retry if necessary
+    LED3 = 0;
+    wait_hold = 0;
+    timer_en = 1;
+    while(wait_hold == 0);
+    // Turn off LED wait again
+    LED3 = 1;
+
+    // wait for ACK from reciever
+    while(strcmp(string,"ACK") != 0);
+
+    // Use the timer to wait for a couple seconds.
+    // LED turns off after time's up.
+    // TODO: acutally poll connection state and retry if necessary
+    LED0 = 0;
+    wait_hold = 0;
+    timer_en = 1;
+    while(wait_hold == 0);
+    LED0 = 1;
+
+    // Reset the UART recieve buffer
+    clear_recieve_buffer();
+
+    SerialTransmit("2\0");
+
+    // We send when the LED turns on
+    LED3 = 0;
+    wait_hold = 0;
+    timer_en = 1;
+    while(wait_hold == 0);
+    // Turn off LED wait again
+    LED3 = 1;
+
+    // wait for ACK from reciever
+    while(strcmp(string,"ACK") != 0);
+
+    LED0 = 0;
+    wait_hold = 0;
+    timer_en = 1;
+    while(wait_hold == 0);
+    LED0 = 1;
+
+    // Reset the UART recieve buffer
+    clear_recieve_buffer();
+
+    SerialTransmit("3\0");
+
+    // We send when the LED turns on
+    LED3 = 0;
+    wait_hold = 0;
+    timer_en = 1;
+    while(wait_hold == 0);
+    // Turn off LED wait again
+    LED3 = 1;
+
+    while(strcmp(string,"ACK") != 0);
+
+    LED0 = 0;
+    wait_hold = 0;
+    timer_en = 1;
+    while(wait_hold == 0);
+    LED0 = 1;
+
+}
+
 
 
