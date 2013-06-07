@@ -1,6 +1,6 @@
 /* 
  * File:   misc.h
- * Author: Jake
+ * Author: Jimmy
  *
  * Created on May 13, 2013, 4:19 PM
  */
@@ -20,6 +20,10 @@ void testLEDs(void);
 void configureOscillator(void);
 void configureINT(void);
 void configureT1(void);
+void configureHorn(void);
+void configurePWM(void);
+void slowWipe(void);
+void soundHorn(void);
 
 #ifdef	__cplusplus
 }

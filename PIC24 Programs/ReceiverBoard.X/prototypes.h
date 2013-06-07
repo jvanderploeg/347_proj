@@ -1,6 +1,6 @@
 /* 
  * File:   prototypes.h
- * Author: Jake
+ * Author: Jimmy
  *
  * Created on May 13, 2013, 5:25 PM
  */
@@ -22,6 +22,9 @@
 #define Left_Head       PORTCbits.RC7
 #define Right_Blink     PORTCbits.RC8
 #define Left_Blink      PORTCbits.RC9
+
+#define Wipers          PORTBbits.RB6
+#define Horn            PORTBbits.RB9
 
 
 
