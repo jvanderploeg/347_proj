@@ -20,6 +20,8 @@ void testLEDs(void);
 void configureOscillator(void);
 void configureINT(void);
 void configureT1(void);
+void setupADC1(void);
+void readADC(int* adc_buff);
 
 #ifdef	__cplusplus
 }

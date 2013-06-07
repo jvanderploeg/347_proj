@@ -91,12 +91,21 @@ int main(int argc, char** argv)
     configureUART2pins();
     configureT1();
     setupLEDs();
+    setupADC1();
 
     LED0 = 1;
     LED1 = 1;
     LED2 = 1;
     LED3 = 1;
     LED4 = 1;
+
+    // test ADC
+    int voltage = 0;
+    
+    while(1){
+        readADC(&voltage);
+    };
+
 
     // Turn on the timer
     T1CONbits.TON = 1;
