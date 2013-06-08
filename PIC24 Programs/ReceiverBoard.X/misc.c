@@ -66,11 +66,11 @@ void soundHorn(void)
 {
     int i;
     Horn = 1;
-     for(i=0;i<1000;i++)
-        wait(1000);
+     for(i=0;i<5000;i++)
+        wait(5000);
     Horn = 0;
-     for(i=0;i<1000;i++)
-        wait(1000);
+     for(i=0;i<5000;i++)
+        wait(5000);
     return;
 
 }
@@ -81,11 +81,11 @@ void slowWipe(void)
 
     int i;
     Wipers = 70;
-    for(i=0;i<1000;i++)
-        wait(1000);
+    for(i=0;i<5000;i++)
+        wait(5000);
     Wipers = 30;
-    for(i=0;i<1000;i++)
-        wait(1000);
+    for(i=0;i<5000;i++)
+        wait(5000);
     return;
 }
 

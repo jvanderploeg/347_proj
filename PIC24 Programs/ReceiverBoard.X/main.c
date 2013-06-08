@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     while(1){
         switch(system_state){
             case connecting:
-                while(strcmp(string,"0006664FAE62\r\n" != 0))
+                while(strcmp(string,"0006664FAE62\r\n") != 0)
                     cautionLights();
                 clear_receive_buffer();
                 char send3[] = "0006664D63FA\r\n";
