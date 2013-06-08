@@ -18,6 +18,7 @@ extern "C" {
 
 
 void setupADC1(void);
+void changeADCinput(int an_pin);
 void readADC(int* adc_buff);
 
 

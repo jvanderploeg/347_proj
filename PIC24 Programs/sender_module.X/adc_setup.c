@@ -1,11 +1,9 @@
 // Setup and library functions for the adc module
 
-
 #include "prototypes.h"
 #include "misc.h"
 
-void setupADC1(void)
-{
+void setupADC1(void){
     // config steps from ADC datasheet
 
     // turn off ADC
@@ -43,14 +41,14 @@ void setupADC1(void)
     //6. Determine how sampling must occur (ADxCON1<3>, ADxCSSH<15:0> and
     //ADxCSSL<15:0>).
     // no need to set ADxCON1 in 12-bit mode
-    /* "The ADxCHS123 and ADxCHS0 registers select the input pins to be
-     * connected to the S&H amplifiers. The ADCSSH/L registers select inputs to
+    /* "The ADxCHS123 and ADxCHS0 registers select the input pins to be 
+     * connected to the S&H amplifiers. The ADCSSH/L registers select inputs to 
      * be sequentially scanned." */
 
     // turn off scanning for now
     // note to self, channel scanning could be badass for our purposes
     AD1CON2bits.CSCNA = 0;
-
+    
     //7. Select manual or auto-sampling.
     // set to manual
     AD1CON1bits.ASAM = 0;
@@ -90,9 +88,19 @@ void setupADC1(void)
     AD1CON1bits.ADON = 1;
 }
 
+void changeADCinput(int an_pin) {
 
-void readADC(int* adc_buff)
-{
+    // turn off ADC
+    AD1CON1bits.ADON = 0;
+
+    // change to specified pin
+    AD1CHS0bits.CH0SA = an_pin;
+
+    // Turn ADC back on (ADxCON1<15>).
+    AD1CON1bits.ADON = 1;
+}
+
+void readADC(int* adc_buff){
     // Start sampling the ADC
     AD1CON1bits.SAMP = 1;
 
