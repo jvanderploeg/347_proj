@@ -28,15 +28,15 @@ void timer2setupPWM(void)
         //Select Pin 42 RP38/RB6
         RPOR2bits.RP38R = 0x10;
 
+	// Disable the Output Compare modules
+	OC1CON1bits.OCM = 0;
+
         /* It is a good practice to initially clear the control bits */
         OC1CON1 = 0;
         OC1CON2 = 0;
 
-	// Disable the Output Compare modules
-	OC1CON1bits.OCM = 0;
 
         // TODO: Setup for 16 bit timer mode
-
 	
         // Timer 2 for OC1
 	OC1CON1bits.OCTSEL = 0;
@@ -44,13 +44,17 @@ void timer2setupPWM(void)
 	// All modules will be PWM mode, fault pin disabled
 	OC1CON1bits.OCM = 0x06;
 
+        // Setup the SYNC mode to be off of Timer2
+        OC1CON2bits.SYNCSEL = 0b01100;
+
+        // Invert the output since we are driving a transistor
+        OC1CON2bits.OCINV = 0;
+
 // Set the initial Duty Cycle to 50%
-	// For timer 2, max duty cycle is 0x04E2
-	OC1R = 0x30D4;
+	// For timer 2, max duty cycle is 
+	OC1R = 50;
 
 // Set the next Duty Cycle to 50%
-	// For timer 2, max duty cycle is 0x04E2
-	OC1RS = 0x30D4;
 
         //Ignore Fault Mode
         OC1CON1bits.ENFLTA = 0;
@@ -65,15 +69,17 @@ void timer2setupPWM(void)
 	T2CONbits.TCS = 0;
 	// Disable the Timer Gated Time Accumulation
 	T2CONbits.TGATE = 0;
-	// We want it to be running at 1 ms, thus 1:64 prescale from 80MHz clock and
+	// We want it to be running at 1 ms, thus 1:64 prescale from 70MHz clock and
 	T2CONbits.TCKPS = 0x02;
-	// Set the period match to 25000
-	PR2 = 0x61A8;
+	// Set the period 
+	PR2 = 100;
 	// Clear the timer register
 	TMR2 = 0x0000;
 
 // Turn on the Timer
 	T2CONbits.TON = 1;
+
+        return;
 
 
 
