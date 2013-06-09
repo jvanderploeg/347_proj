@@ -23,7 +23,8 @@
 #define Right_Blink     PORTCbits.RC8
 #define Left_Blink      PORTCbits.RC9
 
-#define Wipers          PORTBbits.RB6
+#define Wipers          OC1R
+
 #define Horn            PORTBbits.RB9
 
 

@@ -59,7 +59,7 @@ void setupUART2(void)
     INTSetVectorSubPriority(INT_UART_2_VECTOR, INT_SUB_PRIORITY_LEVEL_0);
 */
 
-
+    return;
 }
 
 /*
@@ -89,8 +89,9 @@ void configureUART2pins(void)
     //RPI24 will be the UART2 receive
     //RP36 will be the UART2 transmit
 
-     RPINR19bits.U2RXR = 0x18;      //001   1000 - RPI44
+     RPINR19bits.U2RXR = 0x18;     
      RPOR1bits.RP36R = 0x03;        // 00   0011 - Maps to UART2TX
+     return;
 }
 
 
