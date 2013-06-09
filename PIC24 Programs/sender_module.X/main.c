@@ -101,9 +101,9 @@ int main(int argc, char** argv)
 
     // test ADC
 
-    while(1){
-        checkCommand();
-    };
+//    while(1){
+//        checkCommand();
+//    };
 
     // Turn on the timer
     T1CONbits.TON = 1;
@@ -144,12 +144,12 @@ int main(int argc, char** argv)
 
     SerialTransmit("GB\n");
     // wait for response
-    while(strcmp(string,"000666487754\r\n") != 0);
-    
-    LED0 = 0;
+    while(strcmp(string,"0006664FAE62\r\n") != 0);
 
-    char dev_id[100];
-    strcpy(dev_id,string);
+    char dev_id[] = "0006664FAE62\r\n";
+
+    LED0 = 0;
+    system_state = connecting;
 
     while(1) {
         switch(system_state){
@@ -174,32 +174,34 @@ int main(int argc, char** argv)
                 clear_recieve_buffer();
 
                 // Fire off a connect command to the bluetooth
-                SerialTransmit("C\n");
-                LED1 = 1;
+                SerialTransmit("C,0006664D63FA\n");
+                LED1 = 0;
 
                 // Wait for acknowledge from the BT chip
                 int resp = expect_response("TRYING\r\n",2000);
 
-                LED2 = !resp;
-                
-                // Use the timer to wait for 3 seconds.
-                // TODO: acutally poll connection state and retry if necessary
-                delay(3000);
+                LED3 = !resp;
 
                 // Reset the UART recieve buffer again
                 clear_recieve_buffer();
 
-                // Send our BT chip's address for handshaking.
-                // LED turns on when we send.
-                SerialTransmit(dev_id);
-                LED3 = 0;
+                // Use the timer to wait for 10 seconds.
+                // TODO: acutally poll connection state and retry if necessary
+                delay(10000);
 
+                resp = 0;
+                while(resp != 1)
+                {
+                // Send our BT chip's address for handshaking.
+                SerialTransmit(dev_id);
+                
                 // Wait for the other BT chip to respond with its address
                 // TODO: use the timer to only wait a certain amount of time for
                 // response, and retry/alert the user
                 resp = expect_response("0006664D63FA\r\n",3000);
 
                 LED4 = !resp;
+                }
 
                 // If we make it here, we're connected!
                 // TODO: check to make sure.
@@ -224,6 +226,8 @@ int main(int argc, char** argv)
                 // placeholder til ADC is working...
                 // start the timer and just wait for a bit
                 delay(2000);
+
+                LED1 = 0;
 
                 system_state = command_active;
                 

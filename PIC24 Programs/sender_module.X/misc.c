@@ -1,6 +1,7 @@
 #include "prototypes.h"
 #include "misc.h"
 #include "uart_setup.h"
+#include "adc_setup.h"
 
 #define Baud2BRG(desired_baud)      ( (SYSCLK / (16*desired_baud))-1)
 
