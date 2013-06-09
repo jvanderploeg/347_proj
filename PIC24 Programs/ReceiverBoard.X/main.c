@@ -105,13 +105,13 @@ int main(int argc, char** argv) {
                     //These switch statements update global state variables based on
                     //messages received from the sender module
                     received = string;
+                    clear_receive_buffer();
                     switch(received) {
                         case("LeftBlink\r\n"):
                             if (BlinkL == 0)
                                 BlinkL = 1;
                             else
                                 BlinkL = 0;
-                            clear_receive_buffer();
                             break;
 
                         case("RightBlink\r\n"):
@@ -119,15 +119,15 @@ int main(int argc, char** argv) {
                                 BlinkR = 1;
                             else
                                 BlinkR = 0;
-                            clear_receive_buffer();
                             break;
+
                         case("Headlights\r\n"):
                             if (HeadLights == 0)
                                 HeadLights = 1;
                             else
                                 HeadLights = 0;
-                            clear_receive_buffer();
                             break;
+                            
                         case("Wipers\r\n"):
                             if (Wipe == 0)
                                 Wipe++;
@@ -137,15 +137,14 @@ int main(int argc, char** argv) {
                                 Wipe++;
                             else
                                 Wipe = 0;
-                            clear_receive_buffer();
                             break;
                         //If a horn command is issued immediately sound the horn.
                         case("Horn\r\n"):
                             soundHorn();
                             break;
-                    }  
+                    }
                     display_States();
-                    //Display_States actually implements the commands called by
+                     //Display_States actually implements the commands called by
                     //the sender module (LED's/PWM) according to the current
                     //gloabal variable states.
                 }
