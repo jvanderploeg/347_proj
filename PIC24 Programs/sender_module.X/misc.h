@@ -16,12 +16,18 @@ void wait(int num);
 void setupLEDs(void);
 void setupUART2(void);
 void delay(int wait_time);
+void checkBattery(void);
 void testLEDs(void);
 void configureOscillator(void);
 void configureINT(void);
 void configureT1(void);
 void setupADC1(void);
+void changeADCinput(int an_pin);
 void readADC(int* adc_buff);
+void demo_code(void);
+void clear_recieve_buffer(void);
+int expect_response(char* resp, int timeout_ms);
+
 
 #ifdef	__cplusplus
 }

@@ -7,6 +7,7 @@
       <itemPath>misc.h</itemPath>
       <itemPath>prototypes.h</itemPath>
       <itemPath>uart_setup.h</itemPath>
+      <itemPath>adc_setup.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -18,6 +19,7 @@
       <itemPath>main.c</itemPath>
       <itemPath>misc.c</itemPath>
       <itemPath>uart_setup.c</itemPath>
+      <itemPath>adc_setup.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

@@ -1,6 +1,6 @@
 /* 
  * File:   misc.h
- * Author: Jake
+ * Author: Jimmy
  *
  * Created on May 13, 2013, 4:19 PM
  */
@@ -20,6 +20,23 @@ void testLEDs(void);
 void configureOscillator(void);
 void configureINT(void);
 void configureT1(void);
+void configureHorn(void);
+void configurePWM(void);
+void slowWipe(void);
+void mediumWipe(void);
+void fastWipe(void);
+void wipersDown(void);
+void soundHorn(void);
+void headLightsOn(void);
+void headLightsff(void);
+void rightBlinkOn(void);
+void rightBlinkOff(void)
+void leftBlinkOn(void);
+void leftBlinkOff(void);
+void rightBlinker(void);
+void leftBlinker(void);
+void cautionLights(void);
+
 
 #ifdef	__cplusplus
 }

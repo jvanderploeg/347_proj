@@ -6,6 +6,7 @@ void wait(int num)
 {
     int i;
     for(i=0;i<num;i++);
+    return;
 }
 
 void configureOscillator(void)
@@ -28,6 +29,7 @@ void configureOscillator(void)
     wait(100);
     CLKDIVbits.DOZEN = 1;
     wait(100);
+    return;
 
 /*
 
@@ -56,41 +58,76 @@ void configureHorn(void)
 {
     //TODO: make sure this is a digital output
     TRISBbits.TRISB9 = 0;
+    Horn = 0;
+    return;
 }
 
-void configurePWM(void)
+void soundHorn(void)
 {
-    //TODO: correct period value, peripheral clock, waveform, trigger, and sync.
-
-    //Select Pin 42 RP38/RB6
-    RPOR2bits.RP38R = 0x10;
-
-    /* It is a good practice to initially clear the control bits */
-    OC1CON1 = 0;
-    OC1CON2 = 0;
-    /* The peripheral clock is selected as the clock input to the OC
-        module */
-    OC1CON1bits.OCTSEL = 0x07;
-
-    OC1R = 1000;  /* This is just a typical number, user must calculate based on
-                    the waveform requirements and the system clock */
-
-    //This determines the period
-    OC1RS = 2000;
-    //PWM Edge Detection Mode
-    OC1CON1bits.OCM = 0x6;
-    //Ignore Fault Mode
-    OC1CON1bits.ENFLTA = 0;
-    OC1CON1bits.ENFLTB = 0;
-    OC1CON2bits.SYNCSEL = 0x1F; /* No trigger or sync source is selected */
-
+    int i;
+    Horn = 1;
+     for(i=0;i<5000;i++)
+        wait(5000);
+    Horn = 0;
+     for(i=0;i<5000;i++)
+        wait(5000);
+    return;
 
 }
+
+
+void slowWipe(void)
+{
+
+    int i;
+    Wipers = 70;
+    for(i=0;i<15000;i++)
+        wait(5000);
+    Wipers = 30;
+    for(i=0;i<15000;i++)
+        wait(5000);
+    return;
+}
+
+void mediumWipe(void)
+{
+
+    int i;
+    Wipers = 70;
+    for(i=0;i<10000;i++)
+        wait(5000);
+    Wipers = 30;
+    for(i=0;i<10000;i++)
+        wait(5000);
+    return;
+}
+
+
+void fastWipe(void)
+{
+
+    int i;
+    Wipers = 70;
+    for(i=0;i<5000;i++)
+        wait(5000);
+    Wipers = 30;
+    for(i=0;i<5000;i++)
+        wait(5000);
+    return;
+}
+
+void wipersDown(void) {
+    //TODO: Find the correct value
+    Wipers = 0;
+}
+
+
 
 void configureINT(void)
 {
     // Enable interrupts
     INTCON2bits.GIE = 1;
+    return;
 }
 
 void configureT1(void)
@@ -120,6 +157,7 @@ void configureT1(void)
     IFS0bits.T1IF = 0;
     // Enable timer1 interrupt
     IEC0bits.T1IE = 1;
+    return;
 
     
 }
@@ -150,6 +188,7 @@ void setupLEDs(void)
     TRISCbits.TRISC7 = 0;
     TRISCbits.TRISC8 = 0;
     TRISCbits.TRISC9 = 0;
+    return;
 
 }
 
@@ -165,6 +204,65 @@ void delay(int wait_time)
     int cycles = floor(wait_time/clk_cycle);
 
     wait(cycles);
+    return;
+}
+
+void headLightsOn(void){
+    Right_Head = 1;
+    Left_Head = 1;
+}
+
+void headLightsOff(void){
+    Right_Head = 0;
+    Left_Head = 0;
+}
+
+void rightBlinkOn(void) {
+    Right_Blink = 1; 
+}
+
+void rightBlinkOff(void) {
+    Right_Blink = 0;
+}
+
+void leftBlinkOn(void) {
+    Left_Blink = 1;
+}
+
+void leftBlinkOff(void) {
+    Left_Blink = 0;
+}
+
+void rightBlinker(void) {
+    int i;
+    rightBlinkOn();
+    for(i=0;i<1000;i++)
+        wait(1000);
+    rightBlinkOff();
+    for(i=0;i<1000;i++)
+        wait(1000);
+}
+
+void leftBlinker(void) {
+    int i;
+    leftBlinkOn();
+     for(i=0;i<1000;i++)
+        wait(1000);
+    leftBlinkOff();
+     for(i=0;i<1000;i++)
+        wait(1000);
+}
+
+void cautionLights(void) {
+    leftBlinkOn();
+    rightBlinkOn();
+    int i;
+    for(i=0;i<1000;i++)
+        wait(1000);
+    leftBlinkOff();
+    rightBlinkOff();
+    for(i=0;i<1000;i++)
+        wait(1000);
 }
 
 void testLEDs(void)
@@ -229,6 +327,7 @@ void testLEDs(void)
 
     for(i=0;i<1000;i++)
         wait(1000);
+    return;
 
 
 }

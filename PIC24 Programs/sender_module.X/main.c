@@ -5,11 +5,10 @@
  * Created on May 2, 2013, 10:29 PM
  */
 
-
 #include "prototypes.h"
 #include "misc.h"
 #include "uart_setup.h"
-#include <p24Exxxx.h>
+#include "adc_setup.h"
 
 // enumerated type for state machine
 enum sender_state{connecting, connected_waiting, command_active};
@@ -75,10 +74,6 @@ int timer;
 int wait_hold;
 int timer_en;
 
-void clear_recieve_buffer(void);
-void delay(int wait_ms);
-int expect_response(char* resp, int timeout_ms);
-
 int main(int argc, char** argv)
 {
 
@@ -91,6 +86,7 @@ int main(int argc, char** argv)
     configureUART2pins();
     configureT1();
     setupLEDs();
+    setupButtons();
     setupADC1();
 
     LED0 = 1;
@@ -99,13 +95,15 @@ int main(int argc, char** argv)
     LED3 = 1;
     LED4 = 1;
 
-    // test ADC
-    int voltage = 0;
-    
-    while(1){
-        readADC(&voltage);
-    };
+    // make sure gate is closed
+    BATTERY_CHECK_GATE = 0;
 
+
+    // test ADC
+
+//    while(1){
+//        checkCommand();
+//    };
 
     // Turn on the timer
     T1CONbits.TON = 1;
@@ -146,12 +144,12 @@ int main(int argc, char** argv)
 
     SerialTransmit("GB\n");
     // wait for response
-    while(strcmp(string,"000666487754\r\n") != 0);
-    
-    LED0 = 0;
+    while(strcmp(string,"0006664FAE62\r\n") != 0);
 
-    char dev_id[100];
-    strcpy(dev_id,string);
+    char dev_id[] = "0006664FAE62\r\n";
+
+    LED0 = 0;
+    system_state = connecting;
 
     while(1) {
         switch(system_state){
@@ -176,32 +174,34 @@ int main(int argc, char** argv)
                 clear_recieve_buffer();
 
                 // Fire off a connect command to the bluetooth
-                SerialTransmit("C\n");
-                LED1 = 1;
+                SerialTransmit("C,0006664D63FA\n");
+                LED1 = 0;
 
                 // Wait for acknowledge from the BT chip
                 int resp = expect_response("TRYING\r\n",2000);
 
-                LED2 = !resp;
-                
-                // Use the timer to wait for 3 seconds.
-                // TODO: acutally poll connection state and retry if necessary
-                delay(3000);
+                LED3 = !resp;
 
                 // Reset the UART recieve buffer again
                 clear_recieve_buffer();
 
-                // Send our BT chip's address for handshaking.
-                // LED turns on when we send.
-                SerialTransmit(dev_id);
-                LED3 = 0;
+                // Use the timer to wait for 10 seconds.
+                // TODO: acutally poll connection state and retry if necessary
+                delay(10000);
 
+                resp = 0;
+                while(resp != 1)
+                {
+                // Send our BT chip's address for handshaking.
+                SerialTransmit(dev_id);
+                
                 // Wait for the other BT chip to respond with its address
                 // TODO: use the timer to only wait a certain amount of time for
                 // response, and retry/alert the user
                 resp = expect_response("0006664D63FA\r\n",3000);
 
                 LED4 = !resp;
+                }
 
                 // If we make it here, we're connected!
                 // TODO: check to make sure.
@@ -226,6 +226,8 @@ int main(int argc, char** argv)
                 // placeholder til ADC is working...
                 // start the timer and just wait for a bit
                 delay(2000);
+
+                LED1 = 0;
 
                 system_state = command_active;
                 
@@ -329,114 +331,4 @@ void delay(int wait_ms) {
 
 }
 
-int expect_response(char* resp, int timeout_ms) {
-    int match_sentinel = 0; // signifies whether we got the response we want
-
-    // calculate number of timer "ticks" to put on the countdown
-    timer = timeout_ms/16;
-
-    // clear the "timer is done" flag
-    wait_hold = 0;
-
-    // start the countdown (see the timer interrupt to see how this works)
-    timer_en = 1;
-
-
-    // wait for either the response to come back or the timer to run out
-    while((match_sentinel == 0) || (wait_hold == 0)) {
-        if(strcmp(string,resp) == 0) {
-            match_sentinel = 1;
-        }
-        else {
-            match_sentinel = 0;
-        }   
-    };
-
-    // if we got what we wanted, return 1, otherwise return 0.
-    return match_sentinel;
-}
-
-void clear_recieve_buffer(void) {
-    // Clear the UART recieve buffer
-    memset(string,0,32);
-
-    // Clear the UART recieve index
-    read_index = 0;
-}
-
-void demo_code(void) {
-    // this is Jake's code that sends the receiver 1, waits for ack and such,
-    // sends the reciever 2, etc.
-    
-	// Reset the UART recieve buffer
-    clear_recieve_buffer();
-
-    SerialTransmit("1\0");
-
-    // Use the timer to wait for a couple seconds.
-    // LED turns off after time's up.
-    // TODO: acutally poll connection state and retry if necessary
-    LED3 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    // Turn off LED wait again
-    LED3 = 1;
-
-    // wait for ACK from reciever
-    while(strcmp(string,"ACK") != 0);
-
-    // Use the timer to wait for a couple seconds.
-    // LED turns off after time's up.
-    // TODO: acutally poll connection state and retry if necessary
-    LED0 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    LED0 = 1;
-
-    // Reset the UART recieve buffer
-    clear_recieve_buffer();
-
-    SerialTransmit("2\0");
-
-    // We send when the LED turns on
-    LED3 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    // Turn off LED wait again
-    LED3 = 1;
-
-    // wait for ACK from reciever
-    while(strcmp(string,"ACK") != 0);
-
-    LED0 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    LED0 = 1;
-
-    // Reset the UART recieve buffer
-    clear_recieve_buffer();
-
-    SerialTransmit("3\0");
-
-    // We send when the LED turns on
-    LED3 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    // Turn off LED wait again
-    LED3 = 1;
-
-    while(strcmp(string,"ACK") != 0);
-
-    LED0 = 0;
-    wait_hold = 0;
-    timer_en = 1;
-    while(wait_hold == 0);
-    LED0 = 1;
-                
-}
 
