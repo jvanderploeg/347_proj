@@ -56,6 +56,11 @@ char data;
 char string[32];
 int read_index;
 int next;
+int HeadLights = 0;
+int BlinkL = 0;
+int BlinkR = 0;
+int Wipe = 0;
+
 
 int main(int argc, char** argv) {
 
@@ -90,7 +95,52 @@ int main(int argc, char** argv) {
                 system_state = connected_waiting;
 
             case connected_waiting:
-                headLightsOn();
+                while(1) {
+
+                    if (strcmp(string,"LeftBlink") == 0) {
+                        if (BlinkL == 0)
+                            BlinkL = 1;
+                        else
+                            BlinkL = 0;
+                        clear_receive_buffer();
+                    }
+
+                    if (strcmp(string,"rightBlink") == 0) {
+                        if (BlinkR == 0)
+                            BlinkR = 1;
+                        else
+                            BlinkR = 0;
+                        clear_receive_buffer();
+                    }
+                    
+                    if (strcmp(string,"Headlights") == 0) {
+                        if (HeadLights == 0)
+                            HeadLights = 1;
+                        else
+                            HeadLights = 0;
+                        clear_receive_buffer();
+                    }
+
+                    if (strcmp(string,"Wipers") == 0) {
+                        if (Wipe == 0)
+                            Wipe++;
+                        else if (Wipe == 1)
+                            Wipe++;
+                        else if (Wipe == 2)
+                            Wipe++;
+                        else
+                            Wipe = 0;
+                        clear_receive_buffer();
+                    }
+
+                    if (strcmp(string,"Horn") == 0) {
+                        soundHorn();
+                    }
+
+                    display_States();
+                }
+
+
         }
     }
 
@@ -116,4 +166,29 @@ void _ISR _U2RXInterrupt(void)
 void clear_receive_buffer(void) {
     memset(string,0,32);
     read_index = 0;
+}
+
+
+
+void display_States(void) {
+
+    if (HeadLights == 0)
+        headLightsOff();
+    else
+        headLightsOn();
+
+    if (BlinkL == 1)
+        leftBlinker();
+
+    if (BlinkR == 1)
+        rightBlinker();
+
+    if (Wipe == 0)
+        wipersDown();
+    else if (Wipe == 1)
+        slowWipe();
+    else if (Wipe == 2)
+        mediumWipe();
+    else
+        fastWipe();
 }

@@ -81,6 +81,33 @@ void slowWipe(void)
 
     int i;
     Wipers = 70;
+    for(i=0;i<15000;i++)
+        wait(5000);
+    Wipers = 30;
+    for(i=0;i<15000;i++)
+        wait(5000);
+    return;
+}
+
+void mediumWipe(void)
+{
+
+    int i;
+    Wipers = 70;
+    for(i=0;i<10000;i++)
+        wait(5000);
+    Wipers = 30;
+    for(i=0;i<10000;i++)
+        wait(5000);
+    return;
+}
+
+
+void fastWipe(void)
+{
+
+    int i;
+    Wipers = 70;
     for(i=0;i<5000;i++)
         wait(5000);
     Wipers = 30;
@@ -88,6 +115,12 @@ void slowWipe(void)
         wait(5000);
     return;
 }
+
+void wipersDown(void) {
+    //TODO: Find the correct value
+    Wipers = 0;
+}
+
 
 
 void configureINT(void)
