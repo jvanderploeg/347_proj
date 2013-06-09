@@ -76,68 +76,78 @@ int main(int argc, char** argv) {
 
 
     wait(10000);
-//    char send1[]  = "$$$";
+//    char send[]  = "$$$";
 //    SerialTransmit(send1);
 //    wait(10000);
-//    char send2[] = "SR,0006664FAE62\n";
+//    char send[] = "SR,0006664FAE62\n";
 //    SerialTransmit(send2);
 
     system_state = connecting;
 
     while(1){
         switch(system_state){
+
+            //This state connects and sends/recieves acknowledgments
+            //with the receiver board.
             case connecting:
                 while(strcmp(string,"0006664FAE62\r\n") != 0)
                     cautionLights();
                 clear_receive_buffer();
-                char send3[] = "0006664D63FA\r\n";
-                SerialTransmit(send3);
+                char send1[] = "0006664D63FA\r\n";
+                SerialTransmit(send1);
                 system_state = connected_waiting;
 
+            //This loops forever updating the states of the car according
+            //to commands sent from the sender module.
             case connected_waiting:
+                char received[32];
                 while(1) {
+                    //These switch statements update global state variables based on
+                    //messages received from the sender module
+                    received = string;
+                    switch(received) {
+                        case("LeftBlink\r\n"):
+                            if (BlinkL == 0)
+                                BlinkL = 1;
+                            else
+                                BlinkL = 0;
+                            clear_receive_buffer();
+                            break;
 
-                    if (strcmp(string,"LeftBlink") == 0) {
-                        if (BlinkL == 0)
-                            BlinkL = 1;
-                        else
-                            BlinkL = 0;
-                        clear_receive_buffer();
-                    }
-
-                    if (strcmp(string,"rightBlink") == 0) {
-                        if (BlinkR == 0)
-                            BlinkR = 1;
-                        else
-                            BlinkR = 0;
-                        clear_receive_buffer();
-                    }
-                    
-                    if (strcmp(string,"Headlights") == 0) {
-                        if (HeadLights == 0)
-                            HeadLights = 1;
-                        else
-                            HeadLights = 0;
-                        clear_receive_buffer();
-                    }
-
-                    if (strcmp(string,"Wipers") == 0) {
-                        if (Wipe == 0)
-                            Wipe++;
-                        else if (Wipe == 1)
-                            Wipe++;
-                        else if (Wipe == 2)
-                            Wipe++;
-                        else
-                            Wipe = 0;
-                        clear_receive_buffer();
-                    }
-
-                    if (strcmp(string,"Horn") == 0) {
-                        soundHorn();
-                    }
-
+                        case("RightBlink\r\n"):
+                            if (BlinkR == 0)
+                                BlinkR = 1;
+                            else
+                                BlinkR = 0;
+                            clear_receive_buffer();
+                            break;
+                        case("Headlights\r\n"):
+                            if (HeadLights == 0)
+                                HeadLights = 1;
+                            else
+                                HeadLights = 0;
+                            clear_receive_buffer();
+                            break;
+                        case("Wipers\r\n"):
+                            if (Wipe == 0)
+                                Wipe++;
+                            else if (Wipe == 1)
+                                Wipe++;
+                            else if (Wipe == 2)
+                                Wipe++;
+                            else
+                                Wipe = 0;
+                            clear_receive_buffer();
+                            break;
+                        //If a horn command is issued immediately sound the horn.
+                        case("Horn\r\n"):
+                            soundHorn();
+                            break;
+                    }  
                     display_States();
+                    //Display_States actually implements the commands called by
+                    //the sender module (LED's/PWM) according to the current
+                    //gloabal variable states.
                 }
 
 
