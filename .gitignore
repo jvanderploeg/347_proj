@@ -19,7 +19,7 @@ Desktop.ini
 ##############
 PIC32_Programs/Demo/demo.X/**
 PIC32_Programs/UART/UART.X/**
-
+PIC24_Programs/sender_module.X/nbproject/*
 ##############
 ## Files from merges and shit
 ##############
