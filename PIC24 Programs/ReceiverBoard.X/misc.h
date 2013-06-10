@@ -20,7 +20,6 @@ void testLEDs(void);
 void configureOscillator(void);
 void configureINT(void);
 void configureT1(void);
-void configureHorn(void);
 void configurePWM(void);
 void slowWipe(void);
 void mediumWipe(void);
@@ -36,7 +35,7 @@ void leftBlinkOff(void);
 void rightBlinker(void);
 void leftBlinker(void);
 void cautionLights(void);
-
+void stopHorn(void);
 
 #ifdef	__cplusplus
 }

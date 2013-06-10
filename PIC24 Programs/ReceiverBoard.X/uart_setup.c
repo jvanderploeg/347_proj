@@ -117,4 +117,7 @@ int SerialTransmit(const char *buffer)
     return 0;
 }
 
+void sendAck(void) {
+    SerialTransmit("ACK\n");
 
+}
