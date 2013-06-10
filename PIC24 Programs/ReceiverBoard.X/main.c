@@ -130,10 +130,7 @@ int main(int argc, char** argv) {
                     }
 
                     if (strcmp(string,"HeadLights\r\n") == 0) {
-                        if (HeadLights == 0)
-                            HeadLights = 1;
-                        else
-                            HeadLights = 0;
+                        HeadLights = !HeadLights;
                     }
                             
                     if (strcmp(string,"Wipers\r\n") == 0) {
@@ -151,7 +148,7 @@ int main(int argc, char** argv) {
                         soundHorn();
                         break;
                     }
-                    if (strcmp(string,"HornOff\r\n" == 0 )){
+                    if (strcmp(string,"HornOff\r\n") == 0){
                         stopHorn();
                         break;
                     }
@@ -163,12 +160,13 @@ int main(int argc, char** argv) {
                     // reset command sentinel variable
                     received_command = 0;
 
-                    display_States();
-                     //display_States actually implements the commands called by
-                    //the sender module (LED's/PWM) according to the current
-                    //gloabal variable states.
+                   
+                    
                 }
-
+                display_States();
+                //display_States actually implements the commands called by
+                //the sender module (LED's/PWM) according to the current
+                //gloabal variable states.
 
         }
     }

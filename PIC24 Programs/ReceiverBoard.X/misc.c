@@ -58,7 +58,6 @@ void configureOscillator(void)
 
 void soundHorn(void)
 {
-
     Horn = 2000;
     return;
 
@@ -184,6 +183,13 @@ void setupLEDs(void)
     TRISCbits.TRISC7 = 0;
     TRISCbits.TRISC8 = 0;
     TRISCbits.TRISC9 = 0;
+
+    // turn the lights off
+    Left_Head = 0;
+    Right_Head = 0;
+    Left_Blink = 0;
+    Right_Blink = 0;
+
     return;
 
 }
@@ -205,11 +211,13 @@ void delay(int wait_time)
 
 void headLightsOn(void){
     Right_Head = 1;
+    wait(100);
     Left_Head = 1;
 }
 
 void headLightsOff(void){
     Right_Head = 0;
+    wait(100);
     Left_Head = 0;
 }
 
