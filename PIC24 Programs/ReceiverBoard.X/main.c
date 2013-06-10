@@ -90,31 +90,8 @@ int main(int argc, char** argv) {
 //    wait(10000);
 //    char send[] = "SR,0006664FAE62\n";
 //    SerialTransmit(send2);
-    slowWipe();
-    slowWipe();
-    slowWipe();
-    slowWipe();
-    slowWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    fastWipe();
-    fastWipe();
-    fastWipe();
-    fastWipe();
-    fastWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-
+    soundHorn();
+   
 
 
 

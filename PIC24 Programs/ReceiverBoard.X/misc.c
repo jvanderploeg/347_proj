@@ -66,11 +66,11 @@ void soundHorn(void)
 {
     int i;
     Horn = 1;
-     for(i=0;i<5000;i++)
+     for(i=0;i<10000;i++)
         wait(5000);
-    Horn = 0;
-     for(i=0;i<5000;i++)
-        wait(5000);
+    Horn = 1;
+     for(i=0;i<10000;i++)
+        wait(2500);
     return;
 
 }
