@@ -88,6 +88,8 @@ int main(int argc, char** argv)
     setupLEDs();
     setupButtons();
     setupADC1();
+    // Configures miscellanious digital/analog inputs
+    setupIO();
 
     LED0 = 1;
     LED1 = 1;

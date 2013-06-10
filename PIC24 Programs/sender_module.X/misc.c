@@ -153,8 +153,29 @@ void setupButtons(void){
     // setup AN6/RC0
     TRISCbits.TRISC0 = 1;
     ANSELCbits.ANSC0 = 1;
-
 }
+
+void setupIO(void)
+{
+    // Make sure the output driving the battery checking circuit is an output
+    TRISCbits.TRISC9 = 0;
+
+    // Make sure the battery voltage input is setup as an analog input
+    TRISCbits.TRISC2 = 1;
+    // Make sure it is configured as analog input
+    ANSELCbits.ANSC2 = 1;
+
+    // Have the bluetooth connection status bit setup as input to processor
+    TRISBbits.TRISB8 = 1;
+
+    // Setup the reset input to the bluetooth as an output, and drive it high
+    TRISBbits.TRISB9 = 0;
+    // Drive it high
+    PORTBbits.RB9 = 1;
+    
+}
+
+
 
 void testLEDs(void)
 {
@@ -235,7 +256,11 @@ void testLEDs(void)
     for(i=0;i<1000;i++)
         wait(1000);
 }
-void checkCommand(void){
+
+
+
+void checkCommand(void)
+{
     int state = 0;
 
     // check AN0 (port P7)
