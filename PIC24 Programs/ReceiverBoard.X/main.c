@@ -65,7 +65,7 @@ int HeadLights;
 int BlinkL;
 int BlinkR;
 int Wipe;
-
+int received_command;
 
 int main(int argc, char** argv) {
     HeadLights = 0;
@@ -80,7 +80,6 @@ int main(int argc, char** argv) {
     configureUART2pins();
     configureT1();
     setupLEDs();
-    configureHorn();
     timer2setupPWM();
 
 
@@ -90,30 +89,7 @@ int main(int argc, char** argv) {
 //    wait(10000);
 //    char send[] = "SR,0006664FAE62\n";
 //    SerialTransmit(send2);
-    slowWipe();
-    slowWipe();
-    slowWipe();
-    slowWipe();
-    slowWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    fastWipe();
-    fastWipe();
-    fastWipe();
-    fastWipe();
-    fastWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
-    mediumWipe();
+
 
 
 
@@ -138,7 +114,7 @@ int main(int argc, char** argv) {
             //This loops forever updating the states of the car according
             //to commands sent from the sender module.
             case connected_waiting:
-                while(1) {
+                if(received_command == 1) {
                     if (strcmp(string,"LeftBlink\r\n") == 0) {
                         if (BlinkL == 0)
                             BlinkL = 1;
@@ -160,7 +136,7 @@ int main(int argc, char** argv) {
                             HeadLights = 0;
                     }
                             
-                   if (strcmp(string,"Wipers\r\n") == 0) {
+                    if (strcmp(string,"Wipers\r\n") == 0) {
                         if (Wipe == 0)
                             Wipe++;
                         else if (Wipe == 1)
@@ -169,13 +145,24 @@ int main(int argc, char** argv) {
                             Wipe++;
                         else
                             Wipe = 0;
-                   }
-                        //If a horn command is issued immediately sound the horn.
-                   if (strcmp(string,"Horn\r\n") == 0) {
+                    }
+                    //If a horn command is issued immediately sound the horn.
+                    if (strcmp(string,"HornOn\r\n") == 0) {
                         soundHorn();
                         break;
-                   }
+                    }
+                    if (strcmp(string,"HornOff\r\n" == 0 )){
+                        stopHorn();
+                        break;
+                    }
+
+                    // clear buffer and send acknowledge
                     clear_receive_buffer();
+                    sendAck();
+
+                    // reset command sentinel variable
+                    received_command = 0;
+
                     display_States();
                      //display_States actually implements the commands called by
                     //the sender module (LED's/PWM) according to the current
@@ -198,6 +185,10 @@ void _ISR _U2RXInterrupt(void)
     // put the char into the read buffer at the right spot
     string[read_index] = data;
     read_index++;
+
+    if(data == '\n'){
+        received_command = 1;
+    }
 
     next = 1;
 

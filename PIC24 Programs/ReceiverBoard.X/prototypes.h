@@ -25,7 +25,7 @@
 
 #define Wipers          OC1R
 
-#define Horn            PORTBbits.RB9
+#define Horn            OC2R
 
 
 

@@ -54,27 +54,23 @@ void configureOscillator(void)
 
 }
 
-void configureHorn(void)
-{
-    //TODO: make sure this is a digital output
-    TRISBbits.TRISB9 = 0;
-    Horn = 0;
-    return;
-}
+
 
 void soundHorn(void)
 {
-    int i;
-    Horn = 1;
-     for(i=0;i<5000;i++)
-        wait(5000);
-    Horn = 0;
-     for(i=0;i<5000;i++)
-        wait(5000);
+
+    Horn = 2000;
     return;
 
 }
 
+void stopHorn(void)
+{
+
+    Horn = 0;
+    return;
+
+}
 
 void slowWipe(void)
 {
