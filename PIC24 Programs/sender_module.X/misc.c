@@ -171,8 +171,7 @@ void setupIO(void)
     // Setup the reset input to the bluetooth as an output, and drive it high
     TRISBbits.TRISB9 = 0;
     // Drive it high
-    PORTBbits.RB9 = 1;
-    
+    PORTBbits.RB9 = 1;    
 }
 
 

@@ -37,6 +37,9 @@ extern "C" {
 
 
 #define BATTERY_CHECK_GATE  PORTCbits.RC9
+#define CONNECTION_STATUS   PORTBbits.RB8
+#define BLUETOOTH_RESET     PORTBbits.RB9
+
 
 #define SYSCLK 70000000
 

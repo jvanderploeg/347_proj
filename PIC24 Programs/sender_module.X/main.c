@@ -153,8 +153,10 @@ int main(int argc, char** argv)
     LED0 = 0;
     system_state = connecting;
 
-    while(1) {
-        switch(system_state){
+    while(1)
+    {
+        switch(system_state)
+        {
             case connecting:
                 /*
                  * State for connecting to the reciever via BT.
@@ -184,6 +186,26 @@ int main(int argc, char** argv)
 
                 LED3 = !resp;
 
+                
+                /* We can check the status bit, #defined as CONNECTION_STATUS
+                 * in order to determine if we are connected. Once we have
+                 * connection, then we should proceed.
+                 * 
+                 * We should also dedicate one of the general purpose
+                 * LEDs to the connection status, although we may want
+                 * to only light it up after confirming we are connected
+                 * to the right receiver bluetooth module.
+                 */
+
+                while(CONNECTION_STATUS != 1)
+                {
+                    LED1 = 0;
+                    LED4 = 0;
+                }
+
+                LED1 = 1;
+                LED4 = 1;
+
                 // Reset the UART recieve buffer again
                 clear_recieve_buffer();
 
@@ -194,15 +216,23 @@ int main(int argc, char** argv)
                 resp = 0;
                 while(resp != 1)
                 {
-                // Send our BT chip's address for handshaking.
-                SerialTransmit(dev_id);
-                
-                // Wait for the other BT chip to respond with its address
-                // TODO: use the timer to only wait a certain amount of time for
-                // response, and retry/alert the user
-                resp = expect_response("0006664D63FA\r\n",3000);
+                    // Send our BT chip's address for handshaking.
+                    SerialTransmit(dev_id);
 
-                LED4 = !resp;
+                    // Wait for the other BT chip to respond with its address
+                    // TODO: use the timer to only wait a certain amount of time for
+                    // response, and retry/alert the user
+
+                    resp = expect_response("0006664D63FA\r\n",3000);
+
+                    /*
+                     * At this point, if we do not receive the response back,
+                     * we may want to restard the whole state, and reset the
+                     * bluetooth module. The output #defined as BLUETOOTH_RESET
+                     * can accomplish it.
+                     */
+
+                    LED4 = !resp;
                 }
 
                 // If we make it here, we're connected!
@@ -223,6 +253,10 @@ int main(int argc, char** argv)
                 /*
                  * State for when the BT is connected. Poll the command button,
                  * change state if warranted, rinse and repeat.
+                 *
+                 * Make sure that we are filtering the analog signal so that only
+                 * a "real" press changes state, as opposed to an accidental
+                 * press of the command button
                  */
 
                 // placeholder til ADC is working...
@@ -240,6 +274,12 @@ int main(int argc, char** argv)
                  * State for when the command button is pressed.
                  * Check the other buttons, fire the necessary command over BT,
                  * wait for ack for a certain amount of time, and retry.
+                 *
+                 * Since the horn will be activated for all buttons pressed,
+                 * we should make sure that the user has enough time to press
+                 * all buttons before we send the command. Thus we should
+                 * setup some sort of timer once one of the buttons is pressed
+                 * to allow more time for the user to press all buttons.
                  */
 
                 // TODO: code to check buttons and pick command
@@ -250,7 +290,7 @@ int main(int argc, char** argv)
 
                 // wait for ACK from reciever
                 // TODO: timeout logic
-                while(strcmp(string,"ACK") != 0);
+                resp = expect_response("ACK\n",3000);
 
                 // temporary: wait before proceeding
                 delay(1000);
