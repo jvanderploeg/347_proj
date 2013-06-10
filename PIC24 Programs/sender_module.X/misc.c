@@ -97,6 +97,17 @@ void setupLEDs(void)
     TRISBbits.TRISB14 = 0; // port D4
     TRISBbits.TRISB15 = 0; // port D5
 
+    PORTBbits.RB13 = 1; // port D1 - not soldered at the moment
+    wait(10);
+    PORTAbits.RA10 = 1; // port D2
+    wait(10);
+    PORTAbits.RA7  = 1; // port D3 - not soldered at the moment
+    wait(10);
+    PORTBbits.RB14 = 1; // port D4
+    wait(10);
+    PORTBbits.RB15 = 1; // port D5
+
+
     // Following code is for old prototype board:
     /*
      // Configure them as digital outputs
@@ -174,17 +185,17 @@ void testLEDs(void)
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED1 = 0;
+    CONNECTED_LED = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED1 = 1;
+    CONNECTED_LED = 1;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED1 = 0;
+    CONNECTED_LED = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
@@ -204,33 +215,33 @@ void testLEDs(void)
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED3 = 0;
+    LOW_VOLT_LED = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED3 = 1;
+    LOW_VOLT_LED = 1;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED3 = 0;
+    LOW_VOLT_LED = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
 
-    LED4 = 0;
+    ERROR_LED = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED4 = 1;
+    ERROR_LED = 1;
 
     for(i=0;i<1000;i++)
         wait(1000);
 
-    LED4 = 0;
+    ERROR_LED = 0;
 
     for(i=0;i<1000;i++)
         wait(1000);
@@ -263,10 +274,10 @@ void checkCommand(void)
     }
 
     if(state == 2){
-        LED1 = 0;
+        LED2 = 0;
     }
     else {
-        LED1 = 1;
+        LED2 = 1;
     }
 
     return;
