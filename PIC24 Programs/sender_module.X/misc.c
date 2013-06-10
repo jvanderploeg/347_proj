@@ -32,27 +32,6 @@ void configureOscillator(void)
     CLKDIVbits.DOZEN = 1;
     wait(100);
 
-/*
-
-    // Unlock the clock switching and switch to PLL type clock source
-    __builtin_write_OSCCONH(0x78);
-    __builtin_write_OSCCONH(0x9A);
-
-    OSCCONbits.NOSC = 0x03;
-
-    __builtin_write_OSCCONL(OSCCON | 0x46);
-    __builtin_write_OSCCONL(OSCCON | 0x57);
-
-    OSCCONbits.OSWEN = 1;
-
-    wait(100);
-
-    if(OSCCONbits.OSWEN == 0)
-        LED3 = 0;
-    else
-        LED3 = 1;
-*/
-
 }
 
 void configureINT(void)
@@ -133,7 +112,8 @@ void setupLEDs(void)
      */
 }
 
-void setupButtons(void){
+void setupButtons(void)
+{
     // setup AN0
     TRISAbits.TRISA0 = 1;
     ANSELAbits.ANSA0 = 1;
@@ -292,7 +272,8 @@ void checkCommand(void)
     return;
 }
 
-int expect_response(char* resp, int timeout_ms) {
+int expect_response(char* resp, int timeout_ms)
+{
     int match_sentinel = 0; // signifies whether we got the response we want
 
     // calculate number of timer "ticks" to put on the countdown
@@ -319,7 +300,8 @@ int expect_response(char* resp, int timeout_ms) {
     return match_sentinel;
 }
 
-void clear_recieve_buffer(void) {
+void clear_recieve_buffer(void)
+{
     // Clear the UART recieve buffer
     memset(string,0,32);
 

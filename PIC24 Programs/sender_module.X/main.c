@@ -76,6 +76,7 @@ int timer_en;
 
 int main(int argc, char** argv)
 {
+    int adc_buf;
 
     read_index = 0;
     next = 0;
@@ -123,6 +124,30 @@ int main(int argc, char** argv)
     LED2 = 1;
     LED3 = 1;
 
+
+    /*
+     * Change 20130610 JVP
+     * Check the battery voltage
+     */
+
+    // Open battery gate
+    BATTERY_CHECK_GATE = 1;
+
+    wait(100);
+
+    changeADCinput(8);
+
+    wait(100);
+
+    readADC(&adc_buf);
+
+    wait(100);
+
+    /*
+     * Finish Change
+     *
+     *
+     */
     // Reset the buffer
     memset(string,0,32);
     // Reset index

@@ -18,6 +18,7 @@ void setupLEDs(void);
 void setupUART2(void);
 void setupADC1(void);
 void setupIO(void);
+void setupButtons(void);
 
 void configureOscillator(void);
 void configureINT(void);
