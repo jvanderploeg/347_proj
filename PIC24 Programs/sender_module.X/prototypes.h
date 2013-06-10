@@ -40,8 +40,20 @@ extern "C" {
 #define CONNECTION_STATUS   PORTBbits.RB8
 #define BLUETOOTH_RESET     PORTBbits.RB9
 
-
-#define SYSCLK 70000000
+#define SYSCLK 			70000000
+// Checking on the scope, the voltage level indicates 1.9V
+// and reading the adc gives us a value of 0x7FF. It should
+// be linear after this calibration
+#define REF_VOLT_1_9V	0x7FF
+// This should correspond to around 3.2V on the battery
+// Math: 	1.9V / 0x7FF = 0.928mV per count. 
+//			(3.3V/2) / 0.928mV/count ~= 1777 counts
+//			Err on side of caution -> 1777 ~= 1792 = 0x700
+#define LOW_VOLTAGE		0x700
+// Interrupt runs at 16ms. To get 10 min:
+// (10 * 60)/.016 = 37500 = 0x927C (this is under max 16 bit
+// int of 0xFFFF, so it should be fine)
+#define TEN_MIN			0x927C
 
 
 extern int timer;

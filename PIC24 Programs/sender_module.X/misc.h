@@ -26,7 +26,7 @@ void configureT1(void);
 
 void testLEDs(void);
 
-void checkBattery(void);
+int checkBatteryVoltage(void);
 void changeADCinput(int an_pin);
 void readADC(int* adc_buff);
 void demo_code(void);

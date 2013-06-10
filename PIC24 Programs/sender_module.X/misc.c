@@ -308,3 +308,25 @@ void clear_recieve_buffer(void)
     // Clear the UART recieve index
     read_index = 0;
 }
+
+int checkBatteryVoltage(void)
+{
+    /*
+     * Check the battery voltage
+     */
+
+    int bat_volt;
+    // Open battery gate
+    BATTERY_CHECK_GATE = 1;
+    // Change ADC input to battery input
+    changeADCinput(8);
+    // Read adc
+    readADC(&bat_volt);
+    // Close battery gate
+    BATTERY_CHECK_GATE = 0;
+	
+	return bat_volt;
+}	
+
+
+
