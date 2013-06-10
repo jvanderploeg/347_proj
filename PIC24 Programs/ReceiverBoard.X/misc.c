@@ -54,16 +54,18 @@ void configureOscillator(void)
 
 }
 
-void configureHorn(void)
-{
-    //TODO: make sure this is a digital output
-    TRISBbits.TRISB9 = 0;
-    Horn = 0;
-    return;
-}
+
 
 void soundHorn(void)
 {
+    Horn = 2000;
+    return;
+
+}
+
+void stopHorn(void)
+{
+<<<<<<< HEAD
     int i;
     Horn = 1;
      for(i=0;i<10000;i++)
@@ -71,10 +73,13 @@ void soundHorn(void)
     Horn = 1;
      for(i=0;i<10000;i++)
         wait(2500);
+=======
+
+    Horn = 0;
+>>>>>>> 483dd3db47c0a19f9e48c6d829092a286df9a2c9
     return;
 
 }
-
 
 void slowWipe(void)
 {
@@ -188,6 +193,13 @@ void setupLEDs(void)
     TRISCbits.TRISC7 = 0;
     TRISCbits.TRISC8 = 0;
     TRISCbits.TRISC9 = 0;
+
+    // turn the lights off
+    Left_Head = 0;
+    Right_Head = 0;
+    Left_Blink = 0;
+    Right_Blink = 0;
+
     return;
 
 }
@@ -209,11 +221,13 @@ void delay(int wait_time)
 
 void headLightsOn(void){
     Right_Head = 1;
+    wait(100);
     Left_Head = 1;
 }
 
 void headLightsOff(void){
     Right_Head = 0;
+    wait(100);
     Left_Head = 0;
 }
 

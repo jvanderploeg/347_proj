@@ -29,16 +29,23 @@ extern "C" {
 //#define LED3    PORTAbits.RA10
 //#define LED4    PORTAbits.RA7
 
-#define LED0 PORTBbits.RB13 // port D1 - not soldered at the moment
-#define LED1 PORTAbits.RA10 // port D2
-#define LED2 PORTAbits.RA7  // port D3 - not soldered at the moment
-#define LED3 PORTBbits.RB14 // port D4
-#define LED4 PORTBbits.RB15 // port D5
+#define LED0 				PORTBbits.RB13 // port D1 - not soldered at the moment
+#define LED1 				PORTAbits.RA10 // port D2
+#define LED2 				PORTAbits.RA7  // port D3 - not soldered at the moment
+#define LED3 				PORTBbits.RB14 // port D4
+#define LED4 				PORTBbits.RB15 // port D5
 
+#define LOW_VOLT_LED 		PORTBbits.RB14 // port D4
+#define ERROR_LED			PORTBbits.RB15 // port D5
 
 #define BATTERY_CHECK_GATE  PORTCbits.RC9
 #define CONNECTION_STATUS   PORTBbits.RB8
 #define BLUETOOTH_RESET     PORTBbits.RB9
+
+// These are corresponding analog pin numbers
+#define MASTER_EN_BUTTON	6
+#define BUTTON_1			4
+
 
 #define SYSCLK 			70000000
 // Checking on the scope, the voltage level indicates 1.9V

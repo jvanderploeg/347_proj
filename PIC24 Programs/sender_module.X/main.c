@@ -58,14 +58,6 @@ enum sender_state system_state;
 */
 
 
-/*
- * 
- * We need to
- * 1. Get a demo up of current pin breakout
- * 2. Setup UART
- * 3. Port over functions from PIC32 development
- *
- */
 
 #define WAIT 50
 
@@ -84,6 +76,8 @@ int batt_check;
 int batt_count;
 int battery;
 
+
+// Configuration for MPLAB v8
 _FICD(ICS_PGD3 & JTAGEN_OFF)
 _FPOR(ALTI2C1_ON & ALTI2C2_ON & WDTWIN_WIN25)
 _FWDT(WDTPOST_PS32768 & WDTPRE_PR128 & PLLKEN_ON & WINDIS_OFF & FWDTEN_OFF)
@@ -97,6 +91,7 @@ _FGS(GWRP_OFF & GCP_OFF)
 
 int main(int argc, char** argv)
 {
+	int resp = 0;
 	// Initially check the battery voltage
 	batt_check = 1;
     read_index = 0;
@@ -138,7 +133,7 @@ int main(int argc, char** argv)
     LED2 = 1;
     LED3 = 1;
 
-
+	// Check the battery voltage initially
 	battery = checkBatteryVoltage();
 
     // Reset the buffer
@@ -148,14 +143,10 @@ int main(int argc, char** argv)
 
     // send dollar signs to enter command mode
     char send1[] = "$$$";
-
     SerialTransmit(send1);
 
     // TODO: make this only try for a certain amount of time using the timer
     while(strcmp(string,"CMD\r\n") != 0);
-
-
-    wait(100);
 
     // Reset the buffer
     memset(string,0,32);
@@ -164,8 +155,8 @@ int main(int argc, char** argv)
 
     SerialTransmit("GB\n");
     // wait for response
-    while(strcmp(string,"0006664FAE62\r\n") != 0);
-
+    resp = expect_response("0006664FAE62\r\n",2000);
+    
     char dev_id[] = "0006664FAE62\r\n";
 
     LED0 = 0;
@@ -200,7 +191,7 @@ int main(int argc, char** argv)
                 LED1 = 0;
 
                 // Wait for acknowledge from the BT chip
-                int resp = expect_response("TRYING\r\n",2000);
+                resp = expect_response("TRYING\r\n",2000);
 
                 LED3 = !resp;
 
@@ -218,9 +209,11 @@ int main(int argc, char** argv)
                 while(CONNECTION_STATUS != 1)
                 {
                     LED1 = 0;
+	                LED3 = 1;
                     LED4 = 0;
                 }
 
+                LED3 = !resp;
                 LED1 = 1;
                 LED4 = 1;
 
@@ -245,7 +238,7 @@ int main(int argc, char** argv)
 
                     /*
                      * At this point, if we do not receive the response back,
-                     * we may want to restard the whole state, and reset the
+                     * we may want to restart the whole state, and reset the
                      * bluetooth module. The output #defined as BLUETOOTH_RESET
                      * can accomplish it.
                      */
@@ -263,7 +256,7 @@ int main(int argc, char** argv)
                 LED2 = 1;
                 LED3 = 1;
                 LED4 = 1;
-                
+
                 // Switch to connected state
                 system_state = connected_waiting;
 

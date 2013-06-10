@@ -287,7 +287,12 @@ int expect_response(char* resp, int timeout_ms)
 
 
     // wait for either the response to come back or the timer to run out
-    while((match_sentinel == 0) || (wait_hold == 0)) {
+    
+    // 20130610 - JVP
+    // Shouldn't this be an && comparison, since once one is satisfied
+    // we should break out of the while loop??
+    while((match_sentinel == 0) && (wait_hold == 0)) 
+	{
         if(strcmp(string,resp) == 0) {
             match_sentinel = 1;
         }
