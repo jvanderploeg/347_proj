@@ -20,7 +20,7 @@ extern "C" {
 #include <math.h>
 
 #include <p24EP256GP204.h>
-#include <xc.h>
+//#include <xc.h>
 
 // these are for the old prototype maps
 //#define LED0    PORTAbits.RA0

@@ -16,7 +16,7 @@ enum sender_state system_state;
 
 // PIC24EP256GP204 Configuration Bit Settings
 
-#include <xc.h>
+//#include <xc.h>
 
 // FICD
 #pragma config ICS = PGD3               // ICD Communication Channel Select bits (Communicate on PGEC3 and PGED3)
