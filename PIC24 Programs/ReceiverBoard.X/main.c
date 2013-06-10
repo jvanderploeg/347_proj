@@ -17,6 +17,11 @@
 
 enum receiver_state{connecting, connected_waiting};
 enum receiver_state system_state;
+void display_States(void);
+void clear_receive_buffer(void);
+void _ISR _U2RXInterrupt(void);
+
+
 
 // FICD
 #pragma config ICS = PGD3               // ICD Communication Channel Select bits (Communicate on PGEC3 and PGED3)
@@ -56,13 +61,17 @@ char data;
 char string[32];
 int read_index;
 int next;
-int HeadLights = 0;
-int BlinkL = 0;
-int BlinkR = 0;
-int Wipe = 0;
+int HeadLights;
+int BlinkL;
+int BlinkR;
+int Wipe;
 
 
 int main(int argc, char** argv) {
+    HeadLights = 0;
+    BlinkL = 0;
+    BlinkR = 0;
+    Wipe = 0;
 
 
     configureOscillator();
@@ -72,17 +81,46 @@ int main(int argc, char** argv) {
     configureT1();
     setupLEDs();
     configureHorn();
-    //timer2setupPWM();
+    timer2setupPWM();
 
 
-    wait(10000);
+    wait(5000);
 //    char send[]  = "$$$";
 //    SerialTransmit(send1);
 //    wait(10000);
 //    char send[] = "SR,0006664FAE62\n";
 //    SerialTransmit(send2);
+    slowWipe();
+    slowWipe();
+    slowWipe();
+    slowWipe();
+    slowWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    fastWipe();
+    fastWipe();
+    fastWipe();
+    fastWipe();
+    fastWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+    mediumWipe();
+
+
+
 
     system_state = connecting;
+
+
 
     while(1){
         switch(system_state){
@@ -100,51 +138,46 @@ int main(int argc, char** argv) {
             //This loops forever updating the states of the car according
             //to commands sent from the sender module.
             case connected_waiting:
-                char received[32];
                 while(1) {
-                    //These switch statements update global state variables based on
-                    //messages received from the sender module
-                    received = string;
-                    clear_receive_buffer();
-                    switch(received) {
-                        case("LeftBlink\r\n"):
-                            if (BlinkL == 0)
-                                BlinkL = 1;
-                            else
-                                BlinkL = 0;
-                            break;
-
-                        case("RightBlink\r\n"):
-                            if (BlinkR == 0)
-                                BlinkR = 1;
-                            else
-                                BlinkR = 0;
-                            break;
-
-                        case("Headlights\r\n"):
-                            if (HeadLights == 0)
-                                HeadLights = 1;
-                            else
-                                HeadLights = 0;
-                            break;
-                            
-                        case("Wipers\r\n"):
-                            if (Wipe == 0)
-                                Wipe++;
-                            else if (Wipe == 1)
-                                Wipe++;
-                            else if (Wipe == 2)
-                                Wipe++;
-                            else
-                                Wipe = 0;
-                            break;
-                        //If a horn command is issued immediately sound the horn.
-                        case("Horn\r\n"):
-                            soundHorn();
-                            break;
+                    if (strcmp(string,"LeftBlink\r\n") == 0) {
+                        if (BlinkL == 0)
+                            BlinkL = 1;
+                        else
+                            BlinkL = 0;
                     }
+
+                    if (strcmp(string,"RightBlink\r\n") == 0) {
+                        if (BlinkR == 0)
+                            BlinkR = 1;
+                        else
+                            BlinkR = 0;
+                    }
+
+                    if (strcmp(string,"HeadLights\r\n") == 0) {
+                        if (HeadLights == 0)
+                            HeadLights = 1;
+                        else
+                            HeadLights = 0;
+                    }
+                            
+                   if (strcmp(string,"Wipers\r\n") == 0) {
+                        if (Wipe == 0)
+                            Wipe++;
+                        else if (Wipe == 1)
+                            Wipe++;
+                        else if (Wipe == 2)
+                            Wipe++;
+                        else
+                            Wipe = 0;
+                   }
+                        //If a horn command is issued immediately sound the horn.
+                   if (strcmp(string,"Horn\r\n") == 0) {
+                        soundHorn();
+                        break;
+                   }
+                    clear_receive_buffer();
                     display_States();
-                     //Display_States actually implements the commands called by
+                     //display_States actually implements the commands called by
                     //the sender module (LED's/PWM) according to the current
                     //gloabal variable states.
                 }
@@ -170,11 +203,13 @@ void _ISR _U2RXInterrupt(void)
 
     // Clear the RX interrupt Flag
     IFS1bits.U2RXIF = 0;
+    return;
 }
 
 void clear_receive_buffer(void) {
     memset(string,0,32);
     read_index = 0;
+    return;
 }
 
 
@@ -200,4 +235,5 @@ void display_States(void) {
         mediumWipe();
     else
         fastWipe();
+    return;
 }

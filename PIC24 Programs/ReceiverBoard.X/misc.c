@@ -80,12 +80,12 @@ void slowWipe(void)
 {
 
     int i;
-    Wipers = 70;
-    for(i=0;i<15000;i++)
-        wait(5000);
-    Wipers = 30;
-    for(i=0;i<15000;i++)
-        wait(5000);
+    Wipers = 2200;
+    for(i=0;i<10000;i++)
+        wait(3000);
+    Wipers = 1200;
+    for(i=0;i<10000;i++)
+        wait(3000);
     return;
 }
 
@@ -93,12 +93,12 @@ void mediumWipe(void)
 {
 
     int i;
-    Wipers = 70;
+    Wipers = 2200;
     for(i=0;i<10000;i++)
-        wait(5000);
-    Wipers = 30;
+        wait(2500);
+    Wipers = 1200;
     for(i=0;i<10000;i++)
-        wait(5000);
+        wait(2500);
     return;
 }
 
@@ -107,12 +107,12 @@ void fastWipe(void)
 {
 
     int i;
-    Wipers = 70;
-    for(i=0;i<5000;i++)
-        wait(5000);
-    Wipers = 30;
-    for(i=0;i<5000;i++)
-        wait(5000);
+    Wipers = 2200;
+    for(i=0;i<4000;i++)
+        wait(2000);
+    Wipers = 1200;
+    for(i=0;i<4000;i++)
+        wait(2000);
     return;
 }
 

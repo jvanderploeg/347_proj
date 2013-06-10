@@ -32,27 +32,6 @@ void configureOscillator(void)
     CLKDIVbits.DOZEN = 1;
     wait(100);
 
-/*
-
-    // Unlock the clock switching and switch to PLL type clock source
-    __builtin_write_OSCCONH(0x78);
-    __builtin_write_OSCCONH(0x9A);
-
-    OSCCONbits.NOSC = 0x03;
-
-    __builtin_write_OSCCONL(OSCCON | 0x46);
-    __builtin_write_OSCCONL(OSCCON | 0x57);
-
-    OSCCONbits.OSWEN = 1;
-
-    wait(100);
-
-    if(OSCCONbits.OSWEN == 0)
-        LED3 = 0;
-    else
-        LED3 = 1;
-*/
-
 }
 
 void configureINT(void)
@@ -133,7 +112,8 @@ void setupLEDs(void)
      */
 }
 
-void setupButtons(void){
+void setupButtons(void)
+{
     // setup AN0
     TRISAbits.TRISA0 = 1;
     ANSELAbits.ANSA0 = 1;
@@ -153,8 +133,28 @@ void setupButtons(void){
     // setup AN6/RC0
     TRISCbits.TRISC0 = 1;
     ANSELCbits.ANSC0 = 1;
-
 }
+
+void setupIO(void)
+{
+    // Make sure the output driving the battery checking circuit is an output
+    TRISCbits.TRISC9 = 0;
+
+    // Make sure the battery voltage input is setup as an analog input
+    TRISCbits.TRISC2 = 1;
+    // Make sure it is configured as analog input
+    ANSELCbits.ANSC2 = 1;
+
+    // Have the bluetooth connection status bit setup as input to processor
+    TRISBbits.TRISB8 = 1;
+
+    // Setup the reset input to the bluetooth as an output, and drive it high
+    TRISBbits.TRISB9 = 0;
+    // Drive it high
+    PORTBbits.RB9 = 1;    
+}
+
+
 
 void testLEDs(void)
 {
@@ -235,7 +235,11 @@ void testLEDs(void)
     for(i=0;i<1000;i++)
         wait(1000);
 }
-void checkCommand(void){
+
+
+
+void checkCommand(void)
+{
     int state = 0;
 
     // check AN0 (port P7)
@@ -268,7 +272,8 @@ void checkCommand(void){
     return;
 }
 
-int expect_response(char* resp, int timeout_ms) {
+int expect_response(char* resp, int timeout_ms)
+{
     int match_sentinel = 0; // signifies whether we got the response we want
 
     // calculate number of timer "ticks" to put on the countdown
@@ -295,7 +300,8 @@ int expect_response(char* resp, int timeout_ms) {
     return match_sentinel;
 }
 
-void clear_recieve_buffer(void) {
+void clear_recieve_buffer(void)
+{
     // Clear the UART recieve buffer
     memset(string,0,32);
 
