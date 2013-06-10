@@ -37,7 +37,6 @@ void leftBlinker(void);
 void cautionLights(void);
 void stopHorn(void);
 
-
 #ifdef	__cplusplus
 }
 #endif

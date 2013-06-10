@@ -65,18 +65,7 @@ void soundHorn(void)
 
 void stopHorn(void)
 {
-<<<<<<< HEAD
-    int i;
-    Horn = 1;
-     for(i=0;i<10000;i++)
-        wait(5000);
-    Horn = 1;
-     for(i=0;i<10000;i++)
-        wait(2500);
-=======
-
     Horn = 0;
->>>>>>> 483dd3db47c0a19f9e48c6d829092a286df9a2c9
     return;
 
 }

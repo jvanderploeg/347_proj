@@ -89,13 +89,7 @@ int main(int argc, char** argv) {
 //    wait(10000);
 //    char send[] = "SR,0006664FAE62\n";
 //    SerialTransmit(send2);
-<<<<<<< HEAD
-    soundHorn();
-   
-=======
 
-
->>>>>>> 483dd3db47c0a19f9e48c6d829092a286df9a2c9
 
 
 
