@@ -48,11 +48,11 @@ void timer2setupPWM(void)
         OC1CON2bits.SYNCSEL = 0b01100;
 
         // Invert the output since we are driving a transistor
-        OC1CON2bits.OCINV = 0;
+        OC1CON2bits.OCINV = 1;
 
 // Set the initial Duty Cycle to 50%
 	// For timer 2, max duty cycle is 
-	OC1R = 50;
+	OC1R = 2000;
 
 // Set the next Duty Cycle to 50%
 
@@ -72,7 +72,7 @@ void timer2setupPWM(void)
 	// We want it to be running at 1 ms, thus 1:64 prescale from 70MHz clock and
 	T2CONbits.TCKPS = 0x02;
 	// Set the period 
-	PR2 = 100;
+	PR2 = 4000;
 	// Clear the timer register
 	TMR2 = 0x0000;
 

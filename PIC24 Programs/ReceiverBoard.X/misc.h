@@ -30,7 +30,7 @@ void soundHorn(void);
 void headLightsOn(void);
 void headLightsff(void);
 void rightBlinkOn(void);
-void rightBlinkOff(void)
+void rightBlinkOff(void);
 void leftBlinkOn(void);
 void leftBlinkOff(void);
 void rightBlinker(void);
