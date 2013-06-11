@@ -45,9 +45,13 @@ extern "C" {
 
 // These are corresponding analog pin numbers
 #define MASTER_EN_BUTTON	6
-#define BUTTON_1			4
+#define BUTTON_1                5
+#define BUTTON_2                4
+#define BUTTON_3                1
+#define BUTTON_4                0
 
-#define BUTTON_ON			1350
+#define BUTTON_ON_ADC			1350
+#define BUTTON_ON_COUNT                 1000
 
 #define SYSCLK 			70000000
 // Checking on the scope, the voltage level indicates 1.9V
