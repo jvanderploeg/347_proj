@@ -70,50 +70,6 @@ void stopHorn(void)
 
 }
 
-void slowWipe(void)
-{
-
-    int i;
-    Wipers = 2200;
-    for(i=0;i<10000;i++)
-        wait(3000);
-    Wipers = 1200;
-    for(i=0;i<10000;i++)
-        wait(3000);
-    return;
-}
-
-void mediumWipe(void)
-{
-
-    int i;
-    Wipers = 2200;
-    for(i=0;i<10000;i++)
-        wait(2500);
-    Wipers = 1200;
-    for(i=0;i<10000;i++)
-        wait(2500);
-    return;
-}
-
-
-void fastWipe(void)
-{
-
-    int i;
-    Wipers = 2200;
-    for(i=0;i<4000;i++)
-        wait(2000);
-    Wipers = 1200;
-    for(i=0;i<4000;i++)
-        wait(2000);
-    return;
-}
-
-void wipersDown(void) {
-    //TODO: Find the correct value
-    Wipers = 0;
-}
 
 
 
@@ -195,19 +151,6 @@ void setupLEDs(void)
 
 
 
-void delay(int wait_time)
-{
-    // makes the program wait a given number of milliseconds
-
-    // length of a clock cycle in ms
-    float clk_cycle = (1/SYSCLK)*1000;
-
-    int cycles = floor(wait_time/clk_cycle);
-
-    wait(cycles);
-    return;
-}
-
 void headLightsOn(void){
     Right_Head = 1;
     wait(100);
@@ -220,53 +163,7 @@ void headLightsOff(void){
     Left_Head = 0;
 }
 
-void rightBlinkOn(void) {
-    Right_Blink = 1; 
-}
 
-void rightBlinkOff(void) {
-    Right_Blink = 0;
-}
-
-void leftBlinkOn(void) {
-    Left_Blink = 1;
-}
-
-void leftBlinkOff(void) {
-    Left_Blink = 0;
-}
-
-void rightBlinker(void) {
-    int i;
-    rightBlinkOn();
-    for(i=0;i<1000;i++)
-        wait(1000);
-    rightBlinkOff();
-    for(i=0;i<1000;i++)
-        wait(1000);
-}
-
-void leftBlinker(void) {
-    int i;
-    leftBlinkOn();
-     for(i=0;i<1000;i++)
-        wait(1000);
-    leftBlinkOff();
-     for(i=0;i<1000;i++)
-        wait(1000);
-}
-
-void cautionLights(void) {
-    leftBlinkOn();
-    rightBlinkOn();
-    int i;
-    for(i=0;i<1000;i++)
-        wait(1000);
-    leftBlinkOff();
-    rightBlinkOff();
-    for(i=0;i<1000;i++)
-        wait(1000);
-}
 
 void testLEDs(void)
 {

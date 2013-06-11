@@ -54,7 +54,7 @@ void timer2setupPWM(void)
 
         // Setup the SYNC mode to be off of Timer2
         OC1CON2bits.SYNCSEL = 0b01100;
-        OC2CON2bits.SYNCSEL = 0b01101;
+        OC2CON2bits.SYNCSEL = 0b01101; //Timer3
 
         // Invert the output since we are driving a transistor
         OC1CON2bits.OCINV = 1;

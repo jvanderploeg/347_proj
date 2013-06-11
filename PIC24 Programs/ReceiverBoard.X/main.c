@@ -66,12 +66,23 @@ int BlinkL;
 int BlinkR;
 int Wipe;
 int received_command;
+int timer_en;
+int timer;
+int wait_hold;
+int BLcount;
+int BRcount;
+int Wipecount;
+int Wipedown;
 
 int main(int argc, char** argv) {
     HeadLights = 0;
     BlinkL = 0;
     BlinkR = 0;
     Wipe = 0;
+    Wipedown = 0;
+    BLcount = 0;
+    BRcount = 0;
+    Wipecount = 0;
 
 
     configureOscillator();
@@ -82,6 +93,7 @@ int main(int argc, char** argv) {
     setupLEDs();
     timer2setupPWM();
 
+    T1CONbits.TON = 1;
 
     wait(5000);
 //    char send[]  = "$$$";
@@ -89,9 +101,6 @@ int main(int argc, char** argv) {
 //    wait(10000);
 //    char send[] = "SR,0006664FAE62\n";
 //    SerialTransmit(send2);
-
-
-
 
     system_state = connecting;
 
@@ -104,7 +113,8 @@ int main(int argc, char** argv) {
             //with the receiver board.
             case connecting:
                 while(strcmp(string,"0006664FAE62\r\n") != 0)
-                    cautionLights();
+                    headLightsOn();
+                headLightsOff();
                 clear_receive_buffer();
                 char send1[] = "0006664D63FA\r\n";
                 SerialTransmit(send1);
@@ -112,6 +122,7 @@ int main(int argc, char** argv) {
 
             //This loops forever updating the states of the car according
             //to commands sent from the sender module.
+
             case connected_waiting:
                 if(received_command == 1) {
                     if (strcmp(string,"LeftBlink\r\n") == 0) {
@@ -130,6 +141,10 @@ int main(int argc, char** argv) {
 
                     if (strcmp(string,"HeadLights\r\n") == 0) {
                         HeadLights = !HeadLights;
+                        if (HeadLights == 0)
+                            headLightsOff();
+                        else
+                            headLightsOn();
                     }
                             
                     if (strcmp(string,"Wipers\r\n") == 0) {
@@ -162,7 +177,6 @@ int main(int argc, char** argv) {
                    
                     
                 }
-                display_States();
                 //display_States actually implements the commands called by
                 //the sender module (LED's/PWM) according to the current
                 //gloabal variable states.
@@ -202,26 +216,142 @@ void clear_receive_buffer(void) {
 
 
 
-void display_States(void) {
 
-    if (HeadLights == 0)
-        headLightsOff();
+
+void _ISR _T1Interrupt(void)
+{
+    // Each timer "tick" is 16ms.
+    // Flip the LED to show that it's working.
+    // LED4 = !LED4;
+
+    if(BlinkL == 1) {
+        if(BLcount > Blink_Time)
+        {
+            Left_Blink = !Left_Blink;
+            BLcount = 0;
+        }
+        else
+            BLcount++;
+    }
     else
-        headLightsOn();
+        Left_Blink = 0;
 
-    if (BlinkL == 1)
-        leftBlinker();
-
-    if (BlinkR == 1)
-        rightBlinker();
-
-    if (Wipe == 0)
-        wipersDown();
-    else if (Wipe == 1)
-        slowWipe();
-    else if (Wipe == 2)
-        mediumWipe();
+    if(BlinkR == 1) {
+        if(BRcount > Blink_Time)
+        {
+            Right_Blink = !Right_Blink;
+            BRcount = 0;
+        }
+        else
+            BRcount++;
+    }
     else
-        fastWipe();
-    return;
+        Right_Blink = 0;
+
+    if(Wipe == 0) {
+        Wipers = 1200;
+        Wipedown = 1;
+        Wipecount = 0;
+    }
+    else if(Wipe == 1) {
+        if(Wipecount > Slow_Time)
+        {
+            if (Wipedown == 1) {
+                Wipers = 2200;
+                Wipedown = 0;
+                Wipecount = 0;
+            }
+            else {
+                Wipers = 1200;
+                Wipedown = 1;
+                Wipecount = 0;
+            }
+        }
+        else
+            Wipecount++;
+    }
+    else if(Wipe == 2) {
+        if(Wipecount > Medium_Time)
+        {
+            if (Wipedown == 1) {
+                Wipers = 2200;
+                Wipedown = 0;
+                Wipecount = 0;
+            }
+            else {
+                Wipers = 1200;
+                Wipedown = 1;
+                Wipecount = 0;
+            }
+        }
+        else
+            Wipecount++;
+    }
+    else if(Wipe == 3) {
+        if(Wipecount > Fast_Time)
+        {
+            if (Wipedown == 1) {
+                Wipers = 2200;
+                Wipedown = 0;
+                Wipecount = 0;
+            }
+            else {
+                Wipers = 1200;
+                Wipedown = 1;
+                Wipecount = 0;
+            }
+        }
+        else
+            Wipecount++;
+    }
+
+
+    if(timer_en == 1)
+    {
+
+        // timer variable must be set ahead of time
+        // (the delay function does this)
+        timer_en = 0;
+        wait_hold = 0;
+    }
+    else if(timer > 0)
+    {
+        timer--;
+        wait_hold = 0;
+    }
+    else
+    {
+        timer = 0;
+        wait_hold = 1;
+    }
+
+    // Clear the interrupt flag
+    IFS0bits.T1IF = 0;
 }
+
+void delay(int wait_ms) {
+    /*
+     * Uses the timer interrupt to wait a given number of milliseconds.
+     * Must be a multiple of 16ms (which is the timer rate), or it will
+     * be rounded down to the nearest 16ms multiple.
+     *
+     * NOTE: this is not highly precise. It's pretty close, but allow a little
+     * leeway if precision of your wait times are critical
+     */
+
+    // calculate number of timer "ticks" to put on the countdown
+    timer = wait_ms/16;
+
+    // clear the "timer is done" flag
+    wait_hold = 0;
+
+    // start the countdown (see the timer interrupt to see how this works)
+    timer_en = 1;
+
+    // wait til the countdown is done
+    while(wait_hold == 0);
+
+    return;
+
+}
+
