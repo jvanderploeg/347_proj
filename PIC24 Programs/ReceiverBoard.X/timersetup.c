@@ -46,19 +46,22 @@ void timer2setupPWM(void)
 	
         // Timer 2 for OC1
 	OC1CON1bits.OCTSEL = 0;
-        OC2CON1bits.OCTSEL = 0;
+        // Timer 3 for OC2
+        OC2CON1bits.OCTSEL = 1;
 
-	// All modules will be PWM mode, fault pin disabled
-	OC1CON1bits.OCM = 0x06;
-        OC2CON1bits.OCM = 0x06;
 
         // Setup the SYNC mode to be off of Timer2
         OC1CON2bits.SYNCSEL = 0b01100;
-        OC2CON2bits.SYNCSEL = 0b01101;
+        // Setup the SYNC mode to be off of Timer3
+        OC2CON2bits.SYNCSEL = 0b01101; //Timer3
 
         // Invert the output since we are driving a transistor
         OC1CON2bits.OCINV = 1;
         OC2CON2bits.OCINV = 1;
+
+	// All modules will be PWM mode, fault pin disabled
+	OC1CON1bits.OCM = 0x06;
+        OC2CON1bits.OCM = 0x06;
 
 // Set the initial Duty Cycle to 50%
 	// For timer 2, max duty cycle is 

@@ -157,7 +157,11 @@ void setupIO(void)
     ANSELCbits.ANSC2 = 1;
 
     // Have the bluetooth connection status bit setup as input to processor
+<<<<<<< HEAD
     // Configure as digital input
+=======
+    // Turn off analog
+>>>>>>> d056112c7779b44aaad36d3da8e5d46f982b0b65
     ANSELBbits.ANSB8 = 0;
     TRISBbits.TRISB8 = 1;
 
