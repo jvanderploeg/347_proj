@@ -50,14 +50,14 @@ extern "C" {
 #define BUTTON_3                1
 #define BUTTON_4                0
 
-#define BUTTON_ON_ADC			1350
-#define BUTTON_ON_COUNT                 1000
+#define BUTTON_ON_ADC		1000
+#define BUTTON_ON_COUNT         1000
 
 #define SYSCLK 			70000000
 // Checking on the scope, the voltage level indicates 1.9V
 // and reading the adc gives us a value of 0x7FF. It should
 // be linear after this calibration
-#define REF_VOLT_1_9V	0x7FF
+#define REF_VOLT_1_9V           0x7FF
 // This should correspond to around 3.2V on the battery
 // Math: 	1.9V / 0x7FF = 0.928mV per count. 
 //			(3.3V/2) / 0.928mV/count ~= 1777 counts
@@ -67,6 +67,7 @@ extern "C" {
 // (10 * 60)/.016 = 37500 = 0x927C (this is under max 16 bit
 // int of 0xFFFF, so it should be fine)
 #define TEN_MIN			0x927C
+#define RESET_DELAY		0x3A9
 
 
 extern int timer;

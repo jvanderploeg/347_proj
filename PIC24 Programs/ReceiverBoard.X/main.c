@@ -11,6 +11,9 @@
 #include "misc.h"
 #include "timersetup.h"
 
+// Uncomment for horn/wipers test
+//#define _TEST
+
 // PIC24EP256GP204 Configuration Bit Settings
 
 #include <xc.h>
@@ -101,16 +104,19 @@ int main(int argc, char** argv) {
 
     system_state = connecting;
 
-
-//    while(1)
-//    {
-////        soundHorn();
-//        delay(100);
-//        stopHorn();
-//        delay(100);
-//    }
-
-    delay(1000);
+#ifdef _TEST
+    while(1)
+    {
+        soundHorn();
+        delay(1000);
+        stopHorn();
+        delay(1000);
+        Wipers = 2200;
+        delay(1000);
+        Wipers = 1200;
+        delay(1000);
+    }
+#endif
 
     while(1){
         switch(system_state){

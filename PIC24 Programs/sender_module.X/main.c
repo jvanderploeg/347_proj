@@ -10,13 +10,13 @@
 #include "uart_setup.h"
 #include "adc_setup.h"
 
-#define _TEST
+//#define _TEST
 
 // enumerated type for state machine
 
 enum sender_state
 {
-  connecting, connected_waiting, command_active
+  initialize, connecting, connected_waiting, command_active, send_command
 };
 enum sender_state system_state;
 
@@ -71,13 +71,10 @@ _FOSCSEL(FNOSC_PRIPLL & IESO_ON)
 _FGS(GWRP_OFF & GCP_OFF)
 
 
-#define WAIT 50
-
 char data;
 char send_data;
 char send_string[32] = "Hello World!";
 char string[32];
-int next;
 int read_index;
 int timer;
 int wait_hold;
@@ -95,13 +92,22 @@ int button_2_off;
 int button_3_off;
 int button_4_off;
 
+int button_1_sent;
+int button_2_sent;
+int button_3_sent;
+int button_4_sent;
+
 int batt_check;
 int batt_count;
 int battery;
 
+// Fail safe reset variables
+int RESET = 0;
+int reset_ack;
+int reset_count;
+
 int main(int argc, char** argv)
 {
-  int i;
   int resp = 0;
   // Set all button counts to 0
   master_button = 0;
@@ -115,10 +121,14 @@ int main(int argc, char** argv)
   button_3_off = 0;
   button_4_off = 0;
 
+  button_1_sent = 0;
+  button_2_sent = 0;
+  button_3_sent = 0;
+  button_4_sent = 0;
+
   // Initially check the battery voltage
   batt_check = 1;
   read_index = 0;
-  next = 0;
 
   configureOscillator();
   configureINT();
@@ -130,6 +140,8 @@ int main(int argc, char** argv)
   setupADC1();
   // Configures miscellanious digital/analog inputs
   setupIO();
+  // Setup diagnostic output to toggle when RESET is high
+  TRISBbits.TRISB7 = 0;
 
   LED0 = 1;
   LED2 = 1;
@@ -140,60 +152,76 @@ int main(int argc, char** argv)
   // Turn on the timer
   T1CONbits.TON = 1;
 
-  LED0 = 0;
-  wait(10);
-  LED2 = 0;
-  // Wait for Blueooth module to power up
-  delay(4000);
-  LED0 = 1;
-  wait(10);
-  LED2 = 1;
 
-  // Check the battery voltage initially
-  battery = checkBatteryVoltage();
 
-  /*
-   *	Hack: Attempt to digitally filter the analog signal from
-   *	the push buttons
-   */
-  master_button = 0;
-
-  // Reset the UART recieve buffer
-  clear_recieve_buffer();
-
-  do
-  {
-    // send dollar signs to enter command mode
-    char send1[] = "$$$";
-    SerialTransmit(send1);
-    // We should do something if we do not receive this back
-    resp = expect_response("CMD\r\n", 2000);
-
-    if (resp == 0)
-    {
-      BLUETOOTH_RESET = 0;
-      delay(1000);
-      BLUETOOTH_RESET = 1;
-      delay(5000);
-    }
-
-    // Reset the UART recieve buffer
-    clear_recieve_buffer();
-  } while (resp != 1);
-
-  SerialTransmit("GB\n");
-
-  // We should do something if we do not receive this back
-  resp = expect_response("0006664FAE62\r\n", 2000);
-
-  char dev_id[] = "0006664FAE62\r\n";
-
-  system_state = connecting;
+  system_state = initialize;
 
   while (1)
   {
     switch (system_state)
     {
+      case initialize:
+        /*
+         * State for initializing the bluetooth module.
+         *
+         * Will return to this state if we lost connection during transmission,
+         * or if we do not get a response back from the paired bluetooth module
+         *
+         */
+        CONNECTED_LED = 1;
+        wait(10);
+        ERROR_LED = 1;
+        wait(10);
+
+        LED0 = 0;
+        wait(10);
+        LED2 = 0;
+        BLUETOOTH_RESET = 0;
+        delay(1000);
+        BLUETOOTH_RESET = 1;
+        // Wait for Blueooth module to power up
+        delay(4000);
+        LED0 = 1;
+        wait(10);
+        LED2 = 1;
+
+
+        // Check the battery voltage initially
+        battery = checkBatteryVoltage();
+        
+        do
+        {
+          // send dollar signs to enter command mode
+          char send1[] = "$$$";
+          SerialTransmit(send1);
+
+          // Reset the UART recieve buffer
+          clear_recieve_buffer();
+
+          // We should do something if we do not receive this back
+          resp = expect_response("CMD\r\n", 1000);
+
+          if (resp != 1)
+          {
+            BLUETOOTH_RESET = 0;
+            delay(1000);
+            BLUETOOTH_RESET = 1;
+            delay(10000);
+          }
+        } while (resp != 1);
+
+        SerialTransmit("GB\n");
+
+        // Reset the UART recieve buffer
+        clear_recieve_buffer();
+        // We should do something if we do not receive this back
+        resp = expect_response("0006664FAE62\r\n", 1000);
+
+        char dev_id[] = "0006664FAE62\r\n";
+
+        system_state = connecting;
+
+        break;
       case connecting:
         /*
          * State for connecting to the reciever via BT.
@@ -211,52 +239,80 @@ int main(int argc, char** argv)
         // Assuming we're already in CMD mode from pre-state
         // machine stuff..
 
-        // Reset the UART recieve buffer
-        clear_recieve_buffer();
-
-        // Fire off a connect command to the bluetooth
-        SerialTransmit("C,0006664D63FA\n");
-
-        // Wait for acknowledge from the BT chip
-        resp = expect_response("TRYING\r\n", 2000);
-
-        if (resp != 1)
+        do
         {
-          ERROR_LED = 0;
-          delay(1000);
-          ERROR_LED = 1;
+          // Reset the UART recieve buffer
+          clear_recieve_buffer();
+
+          // Fire off a connect command to the bluetooth
+          SerialTransmit("C,0006664D63FA\n");
+
+          // Wait for acknowledge from the BT chip
+          resp = expect_response("TRYING\r\n", 1000);
+
+          if (resp != 1)
+          {
+            ERROR_LED = 0;
+            // Begin count down
+            RESET = 1;
+            while(reset_ack != 1)
+              wait(10);
+          }
+          
+        } while((resp != 1) && (system_state != initialize));
+        // If we need to reinitialize, get out of current state
+        if(system_state == initialize)
           break;
-        }
+
+        // Turn off error and kill countdown
+        ERROR_LED = 1;
+        RESET = 0;
+        // Make sure that it is out of RESET = 1 state
+        while(reset_ack != 0)
+          wait(10);
+
 
         /* We can check the status bit, #defined as CONNECTION_STATUS
          * in order to determine if we are connected. Once we have
          * connection, then we should proceed.
          */
-        while (CONNECTION_STATUS != 1)
+        do
         {
-          CONNECTED_LED = 1;
-          wait(10);
-          ERROR_LED = 0;
-        }
+          // Similar to expect_response, however this function
+          // checks the CONNECTION_STATUS bit for a 1, instead of string match
+          resp = expect_connection(1000);
 
-        wait(10);
+          if(resp != 1)
+          {
+            ERROR_LED = 0;
+            // Begin count down
+            RESET = 1;
+            while(reset_ack != 1)
+              wait(10);
+          }
+
+        } while((resp != 1) && (system_state != initialize));
+        // If we need to reinitialize, get out of current state
+        if(system_state == initialize)
+          break;
+
+        // Turn off error and kill countdown
         ERROR_LED = 1;
-        // Turn on the connection LED
-        wait(10);
+        RESET = 0;
+        // Make sure that it is out of RESET = 1 state
+        while(reset_ack != 0)
+          wait(10);
 
-        // Reset the UART recieve buffer again
-        clear_recieve_buffer();
-
-        resp = 0;
-        while (resp != 1)
+        do
         {
-          delay(100);
-
           // Send our BT chip's address for handshaking.
           SerialTransmit(dev_id);
 
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+          
           // Wait for the other BT chip to respond with its address
-          resp = expect_response("0006664D63FA\r\n", 3000);
+          resp = expect_response("0006664D63FA\r\n", 1000);
 
           /*
            * At this point, if we do not receive the response back,
@@ -264,15 +320,36 @@ int main(int argc, char** argv)
            * bluetooth module. The output #defined as BLUETOOTH_RESET
            * can accomplish it.
            */
-        }
+          if(resp != 1)
+          {
+            ERROR_LED = 0;
+            // Begin count down
+            RESET = 1;
+            while(reset_ack != 1)
+              wait(10);
+          }
 
+        } while((resp != 1) && (system_state != initialize));
+        // If we need to reinitialize, get out of current state
+        if(system_state == initialize)
+          break;
+
+
+        // Turn off error and kill countdown
+        ERROR_LED = 1;
+        RESET = 0;
+        // Make sure that it is out of RESET = 1 state
+        while(reset_ack != 0)
+          wait(10);
+
+
+// If we make it here, we're connected!
+        // Turn on the connection LED
         wait(10);
         CONNECTED_LED = 0;
-        // If we make it here, we're connected!
         // Switch to connected state
         system_state = connected_waiting;
         break;
-
       case connected_waiting:
         /*
          * State for when the BT is connected. Poll the command button,
@@ -286,13 +363,16 @@ int main(int argc, char** argv)
         /*
          * Hack: Send Jimmy's commands to him in a loop
          */
-        delay(1000);
+        delay(100);
 #ifdef _TEST
         while(1)
         {
           // Send command over BT
           SerialTransmit("LeftBlink\r\n");
 
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+          
           // wait for ACK from reciever
           // TODO: timeout logic
           resp = expect_response("ACK\n", 3000);
@@ -302,6 +382,9 @@ int main(int argc, char** argv)
           // Send command over BT
           SerialTransmit("RightBlink\r\n");
 
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+
           // wait for ACK from reciever
           // TODO: timeout logic
           resp = expect_response("ACK\n", 3000);
@@ -309,6 +392,9 @@ int main(int argc, char** argv)
           delay(3000);
           // Send command over BT
           SerialTransmit("HeadLights\r\n");
+
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
 
           // wait for ACK from reciever
           // TODO: timeout logic
@@ -318,6 +404,9 @@ int main(int argc, char** argv)
           // Send command over BT
           SerialTransmit("Wipers\r\n");
 
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+
           // wait for ACK from reciever
           // TODO: timeout logic
           resp = expect_response("ACK\n", 3000);
@@ -325,6 +414,12 @@ int main(int argc, char** argv)
           delay(3000);
           // Send command over BT
           SerialTransmit("HornOn\r\n");
+
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
 
           // wait for ACK from reciever
           // TODO: timeout logic
@@ -334,6 +429,9 @@ int main(int argc, char** argv)
           // Send command over BT
           SerialTransmit("HornOff\r\n");
 
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+
           // wait for ACK from reciever
           // TODO: timeout logic
           resp = expect_response("ACK\n", 3000);
@@ -342,33 +440,40 @@ int main(int argc, char** argv)
         }
 #endif
 
+//  This will be checked in the timer interrupt, and the change of state will
+//  be taken care of there.
 
-        // Change to the master enable button to poll the command button
-        changeADCinput(MASTER_EN_BUTTON);
-        // Poll ADC input, with digital filtering
-        for (i = 0; i < 100; i++)
-        {
-          readADC(&adc_raw);
-          if (adc_raw > BUTTON_ON_ADC)
-            master_button++;
-          wait(10);
-        }
-
-        if (master_button == 100)
-        {
-          system_state = command_active;
-          LED0 = 0;
-        }
-        else
-        {
-          system_state = connected_waiting;
-          LED0 = 1;
-        }
         
-        master_button = 0;
+//        // Change to the master enable button to poll the command button
+//        changeADCinput(MASTER_EN_BUTTON);
+//        // Poll ADC input, with digital filtering
+//        for (i = 0; i < 100; i++)
+//        {
+//          readADC(&adc_raw);
+//          if (adc_raw > BUTTON_ON_ADC)
+//            master_button++;
+//          wait(10);
+//        }
+//
+//        if (master_button == 100)
+//        {
+//          system_state = command_active;
+//          LED0 = 0;
+//        }
+//        else
+//        {
+//          system_state = connected_waiting;
+//          LED0 = 1;
+//        }
+//
+//        master_button = 0;
 
+        LED0 = 1;
+        wait(1000);
         break;
       case command_active:
+        LED0 = 0;
+
         /*
          * State for when the command button is pressed.
          * Check the other buttons, fire the necessary command over BT,
@@ -417,18 +522,21 @@ int main(int argc, char** argv)
         else
           button_4_off++;
 
-
-
         // If the button has been pressed enough times without going off
         // Send message
-        if(button_1_on > BUTTON_ON_COUNT)
+        if((button_1_on > BUTTON_ON_COUNT) && (button_1_sent == 0))
         {
           LOW_VOLT_LED = 0;
           // Send command over BT
           SerialTransmit("LeftBlink\r\n");
 
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+
           // wait for ACK from reciever
-          resp = expect_response("ACK\n", 3000);
+          while (strcmp(string, "ACK\n") == 0);
+
+          button_1_sent = 1;
           button_1_on = 0;
           button_1_off = 0;
         }
@@ -436,15 +544,101 @@ int main(int argc, char** argv)
         else if(button_1_off > (BUTTON_ON_COUNT/2))
         {
           LOW_VOLT_LED = 1;
-          
           button_1_on = 0;
           button_1_off = 0;
+          button_1_sent = 0;
         }
 
-        resp = expect_response("ACK\n", 3000);
+        // If the button has been pressed enough times without going off
+        // Send message
+        if((button_2_on > BUTTON_ON_COUNT) && (button_2_sent == 0))
+        {
+          LOW_VOLT_LED = 0;
+          // Send command over BT
+          SerialTransmit("RightBlink\r\n");
+
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+
+          // wait for ACK from reciever
+          while (strcmp(string, "ACK\n") == 0);
+
+          button_2_sent = 1;
+          button_2_on = 0;
+          button_2_off = 0;
+        }
+        // Else if the button has been off half as long as on, reset both counts
+        else if(button_2_off > (BUTTON_ON_COUNT/2))
+        {
+          LOW_VOLT_LED = 1;
+          button_2_on = 0;
+          button_2_off = 0;
+          button_2_sent = 0;
+        }
+
+        // If the button has been pressed enough times without going off
+        // Send message
+        if((button_3_on > BUTTON_ON_COUNT) && (button_3_sent == 0))
+        {
+          LOW_VOLT_LED = 0;
+          // Send command over BT
+          SerialTransmit("HeadLights\r\n");
+
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+
+          // wait for ACK from reciever
+          while (strcmp(string, "ACK\n") == 0);
+
+          button_3_sent = 1;
+          button_3_on = 0;
+          button_3_off = 0;
+        }
+        // Else if the button has been off half as long as on, reset both counts
+        else if(button_3_off > (BUTTON_ON_COUNT/2))
+        {
+          LOW_VOLT_LED = 1;
+          button_3_on = 0;
+          button_3_off = 0;
+          button_3_sent = 0;
+        }
+
+
+        // If the button has been pressed enough times without going off
+        // Send message
+        if((button_4_on > BUTTON_ON_COUNT) && (button_4_sent == 0))
+        {
+          LOW_VOLT_LED = 0;
+          // Send command over BT
+          SerialTransmit("Wipers\r\n");
+
+          // Reset the UART recieve buffer again
+          clear_recieve_buffer();
+
+          // wait for ACK from reciever
+          while (strcmp(string, "ACK\n") == 0);
+
+          button_4_sent = 1;
+          button_4_on = 0;
+          button_4_off = 0;
+        }
+        // Else if the button has been off half as long as on, reset both counts
+        else if(button_4_off > (BUTTON_ON_COUNT/2))
+        {
+          LOW_VOLT_LED = 1;
+          button_4_on = 0;
+          button_4_off = 0;
+          button_4_sent = 0;
+        }
+
 
         // temporary: wait before proceeding
-        delay(1000);
+        wait(1000);
+        break;
+      case send_command:
+
+        break;
+
     }
   }
 
@@ -453,8 +647,6 @@ int main(int argc, char** argv)
 
 void _ISR _T1Interrupt(void)
 {
-  // Each timer "tick" is 16ms.
-
   if (timer_en == 1)
   {
     // timer variable must be set ahead of time
@@ -472,6 +664,29 @@ void _ISR _T1Interrupt(void)
     timer = 0;
     wait_hold = 1;
   }
+
+  // We only want this code to run if we are in connected waiting or command active
+  // and we are connected
+  if(CONNECTION_STATUS == 1 && (system_state == connected_waiting || system_state == command_active))
+  {
+    // Change to the master enable button to poll the command button
+    changeADCinput(MASTER_EN_BUTTON);
+    // Poll ADC input, with digital filtering
+    readADC(&adc_raw);
+    if (adc_raw > BUTTON_ON_ADC)
+      master_button++;
+    else
+      master_button = 0;
+
+    if (master_button >= 5)
+      system_state = command_active;
+    else
+      system_state = connected_waiting;
+  }
+  // If we lose the connection, change state back to connecting
+  else if(CONNECTION_STATUS != 1 && (system_state == connected_waiting || system_state == command_active))
+      system_state = connecting;
+
 
   // Timer to check the battery, is self triggered
   if (batt_check == 1)
@@ -491,7 +706,39 @@ void _ISR _T1Interrupt(void)
   if (battery <= LOW_VOLTAGE)
     LOW_VOLT_LED = 0;
   else
-//    LOW_VOLT_LED = 1;
+    wait(10);   //    LOW_VOLT_LED = 1;
+
+
+  // Fail safe. If we get stuck somewhere, and the
+  // RESET integer counts for a minute, reset the
+  // whole state machine.
+  if(RESET == 1)
+  {
+    PORTBbits.RB7 = !PORTBbits.RB7;
+    // Begin reset sequence
+    if(reset_ack == 0)
+    {
+      reset_ack = 1;
+      reset_count = RESET_DELAY;
+    }
+    // Count down!!
+    else if(reset_count > 0)
+      reset_count--;
+    // BOOM! We're fucked, restart everything
+    else
+    {
+      RESET = 0;
+      reset_ack = 0;
+      reset_count = 0;
+      system_state = initialize;
+    }
+  }
+  // No RESET? Clear the counters and ack
+  else
+  {
+    reset_ack = 0;
+    reset_count = 0;
+  }
 
   // Clear the interrupt flag
   IFS0bits.T1IF = 0;
@@ -505,8 +752,6 @@ void _ISR _U2RXInterrupt(void)
   // put the char into the read buffer at the right spot
   string[read_index] = data;
   read_index++;
-
-  next = 1;
 
   // Clear the RX interrupt Flag
   IFS1bits.U2RXIF = 0;
