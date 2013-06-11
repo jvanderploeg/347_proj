@@ -166,14 +166,16 @@ int main(int argc, char** argv) {
                     if (strcmp(string,"Wipers\r\n") == 0)
                     {
                         if (Wipe == 3)
-                        {
-                            Wipers = 2200;
                             Wipe = 0;
-                        }
                         else
                         {
-                            Wipers = 1200;
-                            Wipe++;
+                          if(Wipe == 1)
+                            Wipecount = Slow_Time+1;
+                          else if(Wipe == 2)
+                            Wipecount = Medium_Time+1;
+                          else if(Wipe == 3)
+                            Wipecount = Fast_Time+1;
+                          Wipe++;
                         }
                     }
                     //If a horn command is issued immediately sound the horn.
@@ -295,7 +297,7 @@ void _ISR _T1Interrupt(void)
     {
         Wipers = 1200;
         Wipedown = 1;
-        Wipecount = 0;
+        Wipecount = Slow_Time + 1;
     }
     else if(Wipe == 1)
     {

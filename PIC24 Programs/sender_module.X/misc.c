@@ -200,17 +200,17 @@ void testLEDs(void)
   for (i = 0; i < 1000; i++)
     wait(1000);
 
-  LED2 = 0;
+//  LED2 = 0;
 
   for (i = 0; i < 1000; i++)
     wait(1000);
 
-  LED2 = 1;
+//  LED2 = 1;
 
   for (i = 0; i < 1000; i++)
     wait(1000);
 
-  LED2 = 0;
+//  LED2 = 0;
 
   for (i = 0; i < 1000; i++)
     wait(1000);
@@ -275,10 +275,10 @@ void checkCommand(void)
 
   if (state == 2)
   {
-    LED2 = 0;
+//    LED2 = 0;
   } else
   {
-    LED2 = 1;
+//    LED2 = 1;
   }
 
   return;
@@ -374,6 +374,7 @@ int checkBatteryVoltage(void)
 
   return bat_volt;
 }
+
 
 
 

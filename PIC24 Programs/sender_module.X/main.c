@@ -72,34 +72,38 @@ _FGS(GWRP_OFF & GCP_OFF)
 
 
 char data;
-char send_data;
-char send_string[32] = "Hello World!";
 char string[32];
 int read_index;
 int timer;
 int wait_hold;
 int timer_en;
 
+// ADC reading
 int adc_raw;
+// Master button counter
 int master_button;
+
+// Counts the times each button is on
 int button_1_on;
 int button_2_on;
 int button_3_on;
 int button_4_on;
 
-int button_1_off;
-int button_2_off;
-int button_3_off;
-int button_4_off;
-
+// Prevents issuing same commands multiple times before button release
 int button_1_sent;
 int button_2_sent;
 int button_3_sent;
 int button_4_sent;
+// Additional variable for the horn command
+int horn_sent;
 
+// Battery check variables
 int batt_check;
 int batt_count;
 int battery;
+
+// Command issuing filter
+int command_filter;
 
 // Fail safe reset variables
 int RESET = 0;
@@ -115,11 +119,6 @@ int main(int argc, char** argv)
   button_2_on = 0;
   button_3_on = 0;
   button_4_on = 0;
-  
-  button_1_off = 0;
-  button_2_off = 0;
-  button_3_off = 0;
-  button_4_off = 0;
 
   button_1_sent = 0;
   button_2_sent = 0;
@@ -129,6 +128,11 @@ int main(int argc, char** argv)
   // Initially check the battery voltage
   batt_check = 1;
   read_index = 0;
+
+  // Set the filter to 0, it will only check the button accumulation
+  // after 200 counts
+  command_filter = 0;
+
 
   configureOscillator();
   configureINT();
@@ -140,11 +144,8 @@ int main(int argc, char** argv)
   setupADC1();
   // Configures miscellanious digital/analog inputs
   setupIO();
-  // Setup diagnostic output to toggle when RESET is high
-  TRISBbits.TRISB7 = 0;
 
   LED0 = 1;
-  LED2 = 1;
 
   // make sure gate is closed
   BATTERY_CHECK_GATE = 0;
@@ -152,8 +153,7 @@ int main(int argc, char** argv)
   // Turn on the timer
   T1CONbits.TON = 1;
 
-
-
+  // Initialize state machine
   system_state = initialize;
 
   while (1)
@@ -168,26 +168,22 @@ int main(int argc, char** argv)
          * or if we do not get a response back from the paired bluetooth module
          *
          */
+        // Check the battery voltage initially
+        battery = checkBatteryVoltage();
+
+        // Turn off the LEDs
         CONNECTED_LED = 1;
         wait(10);
         ERROR_LED = 1;
         wait(10);
 
         LED0 = 0;
-        wait(10);
-        LED2 = 0;
         BLUETOOTH_RESET = 0;
         delay(1000);
         BLUETOOTH_RESET = 1;
         // Wait for Blueooth module to power up
         delay(4000);
         LED0 = 1;
-        wait(10);
-        LED2 = 1;
-
-
-        // Check the battery voltage initially
-        battery = checkBatteryVoltage();
         
         do
         {
@@ -220,7 +216,6 @@ int main(int argc, char** argv)
         char dev_id[] = "0006664FAE62\r\n";
 
         system_state = connecting;
-
         break;
       case connecting:
         /*
@@ -270,7 +265,6 @@ int main(int argc, char** argv)
         // Make sure that it is out of RESET = 1 state
         while(reset_ack != 0)
           wait(10);
-
 
         /* We can check the status bit, #defined as CONNECTION_STATUS
          * in order to determine if we are connected. Once we have
@@ -363,7 +357,6 @@ int main(int argc, char** argv)
         /*
          * Hack: Send Jimmy's commands to him in a loop
          */
-        delay(100);
 #ifdef _TEST
         while(1)
         {
@@ -468,6 +461,28 @@ int main(int argc, char** argv)
 //
 //        master_button = 0;
 
+        // Turn the connected LED back on
+        CONNECTED_LED = 0;
+
+        if(horn_sent == 1)
+        {
+            // Send command over BT
+            SerialTransmit("HornOff\r\n");
+
+            // Reset the UART recieve buffer again
+            clear_recieve_buffer();
+
+            // wait for ACK from reciever
+            while (strcmp(string, "ACK\n") == 0);
+
+            horn_sent = 0;
+        }
+
+        button_1_on = 0;
+        button_2_on = 0;
+        button_3_on = 0;
+        button_4_on = 0;
+
         LED0 = 1;
         wait(1000);
         break;
@@ -492,8 +507,6 @@ int main(int argc, char** argv)
         readADC(&adc_raw);
         if (adc_raw > BUTTON_ON_ADC)
           button_1_on++;
-        else
-          button_1_off++;
 
         // Change to the button
         changeADCinput(BUTTON_2);
@@ -501,8 +514,6 @@ int main(int argc, char** argv)
         readADC(&adc_raw);
         if (adc_raw > BUTTON_ON_ADC)
           button_2_on++;
-        else
-          button_2_off++;
 
         // Change to the button
         changeADCinput(BUTTON_3);
@@ -510,8 +521,6 @@ int main(int argc, char** argv)
         readADC(&adc_raw);
         if (adc_raw > BUTTON_ON_ADC)
           button_3_on++;
-        else
-          button_3_off++;
 
         // Change to the button
         changeADCinput(BUTTON_4);
@@ -519,121 +528,190 @@ int main(int argc, char** argv)
         readADC(&adc_raw);
         if (adc_raw > BUTTON_ON_ADC)
           button_4_on++;
+
+        if(command_filter > FILTER)
+        {
+          // If the horn has been sent
+          // Send message
+          if( (button_1_on > BUTTON_ON_COUNT) &&
+              (button_2_on > BUTTON_ON_COUNT) &&
+              (button_3_on > BUTTON_ON_COUNT) &&
+              (button_4_on > BUTTON_ON_COUNT) &&
+              (horn_sent == 0))
+          {
+            CONNECTED_LED = 1;
+            // Send command over BT
+            SerialTransmit("HornOn\r\n");
+
+            // Reset the UART recieve buffer again
+            clear_recieve_buffer();
+
+            // wait for ACK from reciever
+            while (strcmp(string, "ACK\n") == 0);
+
+            // Indicate horn is on
+            horn_sent = 1;
+          }
+          else if(
+              (button_1_on < BUTTON_ON_COUNT) &&
+              (button_2_on < BUTTON_ON_COUNT) &&
+              (button_3_on < BUTTON_ON_COUNT) &&
+              (button_4_on < BUTTON_ON_COUNT) &&
+              (horn_sent == 1))
+          {
+            CONNECTED_LED = 0;
+            // Send command over BT
+            SerialTransmit("HornOff\r\n");
+
+            // Reset the UART recieve buffer again
+            clear_recieve_buffer();
+
+            // wait for ACK from reciever
+            while (strcmp(string, "ACK\n") == 0);
+
+            // Indicate the horn is off
+            horn_sent = 0;
+          }
+
+          // If the button has been pressed enough times without going off
+          // And the other buttons are not pressed
+          // And the horn is currently off
+          // Send message
+          if( (button_1_on > BUTTON_ON_COUNT) &&
+              (button_2_on < BUTTON_ON_COUNT) && 
+              (button_3_on < BUTTON_ON_COUNT) && 
+              (button_4_on < BUTTON_ON_COUNT) &&
+              (button_1_sent == 0)            &&
+              (horn_sent == 0))
+          {
+            CONNECTED_LED = 1;
+            // Send command over BT
+            SerialTransmit("LeftBlink\r\n");
+
+            // Reset the UART recieve buffer again
+            clear_recieve_buffer();
+
+            // wait for ACK from reciever
+            while (strcmp(string, "ACK\n") == 0);
+
+            //Indicate the button_1 command is on
+            button_1_sent = 1;
+          }
+          // Else if the button has been off half as long as on, reset both counts
+          else if((button_1_on < BUTTON_ON_COUNT) && (button_1_sent == 1))
+          {
+            CONNECTED_LED = 0;
+            //Indicate the button_1 command is off
+            button_1_sent = 0;
+          }
+
+          // If the button has been pressed enough times without going off
+          // And the other buttons are not pressed
+          // And the horn is currently off
+          // Send message
+          if( (button_1_on < BUTTON_ON_COUNT) &&
+              (button_2_on > BUTTON_ON_COUNT) &&
+              (button_3_on < BUTTON_ON_COUNT) &&
+              (button_4_on < BUTTON_ON_COUNT) &&
+              (button_2_sent == 0)            &&
+              (horn_sent == 0))
+          {
+            CONNECTED_LED = 1;
+            // Send command over BT
+            SerialTransmit("RightBlink\r\n");
+
+            // Reset the UART recieve buffer again
+            clear_recieve_buffer();
+
+            // wait for ACK from reciever
+            while (strcmp(string, "ACK\n") == 0);
+
+            //Indicate the button_2 command is on
+            button_2_sent = 1;
+          }
+          // Else if the button has been off half as long as on, reset both counts
+          else if((button_2_on < BUTTON_ON_COUNT) && (button_2_sent == 1))
+          {
+            CONNECTED_LED = 0;
+            //Indicate the button_2 command is off
+            button_2_sent = 0;
+          }
+
+          // If the button has been pressed enough times without going off
+          // And the other buttons are not pressed
+          // And the horn is currently off
+          // Send message
+          if( (button_1_on < BUTTON_ON_COUNT) &&
+              (button_2_on < BUTTON_ON_COUNT) &&
+              (button_3_on > BUTTON_ON_COUNT) &&
+              (button_4_on < BUTTON_ON_COUNT) &&
+              (button_3_sent == 0)            &&
+              (horn_sent == 0))
+          {
+            CONNECTED_LED = 1;
+            // Send command over BT
+            SerialTransmit("HeadLights\r\n");
+
+            // Reset the UART recieve buffer again
+            clear_recieve_buffer();
+
+            // wait for ACK from reciever
+            while (strcmp(string, "ACK\n") == 0);
+
+            //Indicate the button_3 command is on
+            button_3_sent = 1;
+          }
+          // Else if the button has been off half as long as on, reset both counts
+          else if((button_3_on < BUTTON_ON_COUNT) && (button_3_sent == 1))
+          {
+            CONNECTED_LED = 0;
+            //Indicate the button_3 command is off
+            button_3_sent = 0;
+          }
+
+
+          // If the button has been pressed enough times without going off
+          // And the other buttons are not pressed
+          // And the horn is currently off
+          // Send message
+          if( (button_1_on < BUTTON_ON_COUNT) &&
+              (button_2_on < BUTTON_ON_COUNT) &&
+              (button_3_on < BUTTON_ON_COUNT) &&
+              (button_4_on > BUTTON_ON_COUNT) &&
+              (button_4_sent == 0)            &&
+              (horn_sent == 0))
+          {
+            CONNECTED_LED = 1;
+            // Send command over BT
+            SerialTransmit("Wipers\r\n");
+
+            // Reset the UART recieve buffer again
+            clear_recieve_buffer();
+
+            // wait for ACK from reciever
+            while (strcmp(string, "ACK\n") == 0);
+
+            //Indicate the button_4 command is on
+            button_4_sent = 1;
+          }
+          // Else if the button has been off half as long as on, reset both counts
+          else if((button_4_on < BUTTON_ON_COUNT) && (button_4_sent == 1))
+          {
+            CONNECTED_LED = 0;
+            //Indicate the button_4 command is off
+            button_4_sent = 0;
+          }
+
+          button_1_on = 0;
+          button_2_on = 0;
+          button_3_on = 0;
+          button_4_on = 0;
+          
+          command_filter = 0;
+        }
         else
-          button_4_off++;
-
-        // If the button has been pressed enough times without going off
-        // Send message
-        if((button_1_on > BUTTON_ON_COUNT) && (button_1_sent == 0))
-        {
-          LOW_VOLT_LED = 0;
-          // Send command over BT
-          SerialTransmit("LeftBlink\r\n");
-
-          // Reset the UART recieve buffer again
-          clear_recieve_buffer();
-
-          // wait for ACK from reciever
-          while (strcmp(string, "ACK\n") == 0);
-
-          button_1_sent = 1;
-          button_1_on = 0;
-          button_1_off = 0;
-        }
-        // Else if the button has been off half as long as on, reset both counts
-        else if(button_1_off > (BUTTON_ON_COUNT/2))
-        {
-          LOW_VOLT_LED = 1;
-          button_1_on = 0;
-          button_1_off = 0;
-          button_1_sent = 0;
-        }
-
-        // If the button has been pressed enough times without going off
-        // Send message
-        if((button_2_on > BUTTON_ON_COUNT) && (button_2_sent == 0))
-        {
-          LOW_VOLT_LED = 0;
-          // Send command over BT
-          SerialTransmit("RightBlink\r\n");
-
-          // Reset the UART recieve buffer again
-          clear_recieve_buffer();
-
-          // wait for ACK from reciever
-          while (strcmp(string, "ACK\n") == 0);
-
-          button_2_sent = 1;
-          button_2_on = 0;
-          button_2_off = 0;
-        }
-        // Else if the button has been off half as long as on, reset both counts
-        else if(button_2_off > (BUTTON_ON_COUNT/2))
-        {
-          LOW_VOLT_LED = 1;
-          button_2_on = 0;
-          button_2_off = 0;
-          button_2_sent = 0;
-        }
-
-        // If the button has been pressed enough times without going off
-        // Send message
-        if((button_3_on > BUTTON_ON_COUNT) && (button_3_sent == 0))
-        {
-          LOW_VOLT_LED = 0;
-          // Send command over BT
-          SerialTransmit("HeadLights\r\n");
-
-          // Reset the UART recieve buffer again
-          clear_recieve_buffer();
-
-          // wait for ACK from reciever
-          while (strcmp(string, "ACK\n") == 0);
-
-          button_3_sent = 1;
-          button_3_on = 0;
-          button_3_off = 0;
-        }
-        // Else if the button has been off half as long as on, reset both counts
-        else if(button_3_off > (BUTTON_ON_COUNT/2))
-        {
-          LOW_VOLT_LED = 1;
-          button_3_on = 0;
-          button_3_off = 0;
-          button_3_sent = 0;
-        }
-
-
-        // If the button has been pressed enough times without going off
-        // Send message
-        if((button_4_on > BUTTON_ON_COUNT) && (button_4_sent == 0))
-        {
-          LOW_VOLT_LED = 0;
-          // Send command over BT
-          SerialTransmit("Wipers\r\n");
-
-          // Reset the UART recieve buffer again
-          clear_recieve_buffer();
-
-          // wait for ACK from reciever
-          while (strcmp(string, "ACK\n") == 0);
-
-          button_4_sent = 1;
-          button_4_on = 0;
-          button_4_off = 0;
-        }
-        // Else if the button has been off half as long as on, reset both counts
-        else if(button_4_off > (BUTTON_ON_COUNT/2))
-        {
-          LOW_VOLT_LED = 1;
-          button_4_on = 0;
-          button_4_off = 0;
-          button_4_sent = 0;
-        }
-
-
-        // temporary: wait before proceeding
-        wait(1000);
+          command_filter++;
+        
         break;
       case send_command:
 
