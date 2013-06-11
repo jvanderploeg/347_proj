@@ -15,6 +15,7 @@ extern "C" {
 void setupUART2(void);
 void configureUART2pins(void);
 int SerialTransmit(const char *buffer);
+void sendAck(void);
 
 
 #ifdef	__cplusplus

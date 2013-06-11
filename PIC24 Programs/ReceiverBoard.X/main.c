@@ -91,20 +91,26 @@ int main(int argc, char** argv) {
     configureUART2pins();
     configureT1();
     setupLEDs();
+    TRISBbits.TRISB6 = 0;
+    TRISBbits.TRISB9 = 0;
     timer2setupPWM();
 
     T1CONbits.TON = 1;
+    T2CONbits.TON = 1;
 
-    wait(5000);
-//    char send[]  = "$$$";
-//    SerialTransmit(send1);
-//    wait(10000);
-//    char send[] = "SR,0006664FAE62\n";
-//    SerialTransmit(send2);
 
     system_state = connecting;
 
 
+//    while(1)
+//    {
+////        soundHorn();
+//        delay(100);
+//        stopHorn();
+//        delay(100);
+//    }
+
+    delay(1000);
 
     while(1){
         switch(system_state){
@@ -124,22 +130,26 @@ int main(int argc, char** argv) {
             //to commands sent from the sender module.
 
             case connected_waiting:
-                if(received_command == 1) {
-                    if (strcmp(string,"LeftBlink\r\n") == 0) {
+                if(received_command == 1)
+                {
+                    if (strcmp(string,"LeftBlink\r\n") == 0)
+                    {
                         if (BlinkL == 0)
                             BlinkL = 1;
                         else
                             BlinkL = 0;
                     }
 
-                    if (strcmp(string,"RightBlink\r\n") == 0) {
+                    if (strcmp(string,"RightBlink\r\n") == 0)
+                    {
                         if (BlinkR == 0)
                             BlinkR = 1;
                         else
                             BlinkR = 0;
                     }
 
-                    if (strcmp(string,"HeadLights\r\n") == 0) {
+                    if (strcmp(string,"HeadLights\r\n") == 0)
+                    {
                         HeadLights = !HeadLights;
                         if (HeadLights == 0)
                             headLightsOff();
@@ -147,24 +157,30 @@ int main(int argc, char** argv) {
                             headLightsOn();
                     }
                             
-                    if (strcmp(string,"Wipers\r\n") == 0) {
-                        if (Wipe == 0)
-                            Wipe++;
-                        else if (Wipe == 1)
-                            Wipe++;
-                        else if (Wipe == 2)
-                            Wipe++;
-                        else
+                    if (strcmp(string,"Wipers\r\n") == 0)
+                    {
+                        if (Wipe == 3)
+                        {
+                            Wipers = 2200;
                             Wipe = 0;
+                        }
+                        else
+                        {
+                            Wipers = 1200;
+                            Wipe++;
+                        }
                     }
                     //If a horn command is issued immediately sound the horn.
-                    if (strcmp(string,"HornOn\r\n") == 0) {
+                    if (strcmp(string,"HornOn\r\n") == 0)
                         soundHorn();
-                        break;
-                    }
-                    if (strcmp(string,"HornOff\r\n") == 0){
+
+                    if (strcmp(string,"HornOff\r\n") == 0)
                         stopHorn();
-                        break;
+
+                    if (strcmp(string,"0006664FAE62\r\n") == 0)
+                    {
+                        char send1[] = "0006664D63FA\r\n";
+                        SerialTransmit(send1);
                     }
 
                     // clear buffer and send acknowledge
@@ -224,36 +240,59 @@ void _ISR _T1Interrupt(void)
     // Flip the LED to show that it's working.
     // LED4 = !LED4;
 
-    if(BlinkL == 1) {
-        if(BLcount > Blink_Time)
+    if(BLcount > Blink_Time)
+    {
+        if(BlinkL == 1 && BlinkR == 1)
         {
+            if(Left_Blink == 1)
+            {
+                wait(10);
+                Left_Blink = 0;
+                wait(10);
+                Right_Blink = 0;
+            }
+            else
+            {
+                wait(10);
+                Left_Blink = 1;
+                wait(10);
+                Right_Blink = 1;
+            }
+        }
+        else if(BlinkL == 1 && BlinkR == 0)
+        {
+            wait(10);
             Left_Blink = !Left_Blink;
-            BLcount = 0;
+            wait(10);
+            Right_Blink = 0;
         }
-        else
-            BLcount++;
-    }
-    else
-        Left_Blink = 0;
-
-    if(BlinkR == 1) {
-        if(BRcount > Blink_Time)
+        else if(BlinkL == 0 && BlinkR == 1)
         {
+            wait(10);
             Right_Blink = !Right_Blink;
-            BRcount = 0;
+            wait(10);
+            Left_Blink = 0;
         }
-        else
-            BRcount++;
+        else if(BlinkL == 0 && BlinkR == 0)
+        {
+            wait(10);
+            Left_Blink = 0;
+            wait(10);
+            Right_Blink = 0;
+        }
+        BLcount = 0;
     }
     else
-        Right_Blink = 0;
+        BLcount++;
 
-    if(Wipe == 0) {
+    if(Wipe == 0)
+    {
         Wipers = 1200;
         Wipedown = 1;
         Wipecount = 0;
     }
-    else if(Wipe == 1) {
+    else if(Wipe == 1)
+    {
         if(Wipecount > Slow_Time)
         {
             if (Wipedown == 1) {
@@ -270,7 +309,8 @@ void _ISR _T1Interrupt(void)
         else
             Wipecount++;
     }
-    else if(Wipe == 2) {
+    else if(Wipe == 2)
+    {
         if(Wipecount > Medium_Time)
         {
             if (Wipedown == 1) {
@@ -308,7 +348,6 @@ void _ISR _T1Interrupt(void)
 
     if(timer_en == 1)
     {
-
         // timer variable must be set ahead of time
         // (the delay function does this)
         timer_en = 0;

@@ -65,7 +65,7 @@ void soundHorn(void)
 
 void stopHorn(void)
 {
-    Horn = 0;
+    Horn = 4000;
     return;
 
 }
@@ -155,12 +155,15 @@ void headLightsOn(void){
     Right_Head = 1;
     wait(100);
     Left_Head = 1;
+    return;
 }
 
-void headLightsOff(void){
+void headLightsOff(void)
+{
     Right_Head = 0;
     wait(100);
     Left_Head = 0;
+    return;
 }
 
 

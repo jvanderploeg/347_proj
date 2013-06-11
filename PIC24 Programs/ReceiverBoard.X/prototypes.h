@@ -27,10 +27,10 @@
 
 #define Horn            OC2R
 
-#define Blink_Time      1000
-#define Slow_Time       10000
-#define Medium_Time     7500
-#define Fast_Time       5000
+#define Blink_Time      25
+#define Slow_Time       100
+#define Medium_Time     75
+#define Fast_Time       50
 
 
 

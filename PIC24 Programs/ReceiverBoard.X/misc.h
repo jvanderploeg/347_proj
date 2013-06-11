@@ -21,7 +21,7 @@ void configureINT(void);
 void configureT1(void);
 void configurePWM(void);
 void headLightsOn(void);
-void headLightsff(void);
+void headLightsOff(void);
 void soundHorn(void);
 void stopHorn(void);
 
