@@ -157,6 +157,8 @@ void setupIO(void)
     ANSELCbits.ANSC2 = 1;
 
     // Have the bluetooth connection status bit setup as input to processor
+    // Turn off analog
+    ANSELBbits.ANSB8 = 0;
     TRISBbits.TRISB8 = 1;
 
     // Setup the reset input to the bluetooth as an output, and drive it high
