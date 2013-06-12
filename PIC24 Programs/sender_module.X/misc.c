@@ -96,15 +96,15 @@ void setupLEDs(void)
   TRISBbits.TRISB14 = 0; // port D4
   TRISBbits.TRISB15 = 0; // port D5
 
-  PORTBbits.RB13 = 1; // port D1 - not soldered at the moment
+  PORTBbits.RB13 = LEDOFF; // port D1 - not soldered at the moment
   wait(10);
-  PORTAbits.RA10 = 1; // port D2
+  PORTAbits.RA10 = LEDOFF; // port D2
   wait(10);
-  PORTAbits.RA7 = 1; // port D3 - not soldered at the moment
+  PORTAbits.RA7 = LEDOFF; // port D3 - not soldered at the moment
   wait(10);
-  PORTBbits.RB14 = 1; // port D4
+  PORTBbits.RB14 = LEDOFF; // port D4
   wait(10);
-  PORTBbits.RB15 = 1; // port D5
+  PORTBbits.RB15 = LEDOFF; // port D5
 
 
   // Following code is for old prototype board:
@@ -373,6 +373,44 @@ int checkBatteryVoltage(void)
   BATTERY_CHECK_GATE = 0;
 
   return bat_volt;
+}
+
+void ledStateDisconnected(void) {
+    if(voltage_is_low == 0){
+        LED_RED = LEDON;
+        wait(10);
+        LED_GREEN = LEDOFF;
+        wait(10);
+        LED_BLUE = LEDOFF;
+    }
+}
+
+void ledStateConnected(void) {
+    if(voltage_is_low == 0){
+        LED_RED = LEDOFF;
+        wait(10);
+        LED_GREEN = LEDON;
+        wait(10);
+        LED_BLUE = LEDOFF;
+    }
+}
+
+void ledStateLowVoltage(void) {
+    LED_RED = LEDOFF;
+    wait(10);
+    LED_GREEN = LEDOFF;
+    wait(10);
+    LED_BLUE = LEDON;
+}
+
+void ledStateOff(void) {
+    if(voltage_is_low == 0){
+        LED_RED = LEDOFF;
+        wait(10);
+        LED_GREEN = LEDOFF;
+        wait(10);
+        LED_BLUE = LEDOFF;
+    }
 }
 
 

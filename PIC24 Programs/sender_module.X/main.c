@@ -77,6 +77,7 @@ int read_index;
 int timer;
 int wait_hold;
 int timer_en;
+int voltage_is_low = 0;
 
 // ADC reading
 int adc_raw;
@@ -145,13 +146,24 @@ int main(int argc, char** argv)
   // Configures miscellanious digital/analog inputs
   setupIO();
 
-  LED0 = 1;
 
   // make sure gate is closed
   BATTERY_CHECK_GATE = 0;
 
   // Turn on the timer
   T1CONbits.TON = 1;
+
+//  while(1) {
+//      ledStateDisconnected();
+//      delay(1000);
+//      ledStateConnected();
+//      delay(1000);
+//      ledStateLowVoltage();
+//      delay(1000);
+//      ledStateOff();
+//      delay(5000);
+//  }
+
 
   // Initialize state machine
   system_state = initialize;
@@ -171,19 +183,13 @@ int main(int argc, char** argv)
         // Check the battery voltage initially
         battery = checkBatteryVoltage();
 
-        // Turn off the LEDs
-        CONNECTED_LED = 1;
-        wait(10);
-        ERROR_LED = 1;
-        wait(10);
+        ledStateDisconnected();
 
-        LED0 = 0;
         BLUETOOTH_RESET = 0;
         delay(1000);
         BLUETOOTH_RESET = 1;
         // Wait for Blueooth module to power up
         delay(4000);
-        LED0 = 1;
         
         do
         {
@@ -247,7 +253,7 @@ int main(int argc, char** argv)
 
           if (resp != 1)
           {
-            ERROR_LED = 0;
+//            ERROR_LED = 0;
             // Begin count down
             RESET = 1;
             while(reset_ack != 1)
@@ -260,7 +266,7 @@ int main(int argc, char** argv)
           break;
 
         // Turn off error and kill countdown
-        ERROR_LED = 1;
+//        ERROR_LED = 1;
         RESET = 0;
         // Make sure that it is out of RESET = 1 state
         while(reset_ack != 0)
@@ -278,7 +284,7 @@ int main(int argc, char** argv)
 
           if(resp != 1)
           {
-            ERROR_LED = 0;
+//            ERROR_LED = 0;
             // Begin count down
             RESET = 1;
             while(reset_ack != 1)
@@ -291,7 +297,7 @@ int main(int argc, char** argv)
           break;
 
         // Turn off error and kill countdown
-        ERROR_LED = 1;
+//        ERROR_LED = 1;
         RESET = 0;
         // Make sure that it is out of RESET = 1 state
         while(reset_ack != 0)
@@ -316,7 +322,7 @@ int main(int argc, char** argv)
            */
           if(resp != 1)
           {
-            ERROR_LED = 0;
+//            ERROR_LED = 0;
             // Begin count down
             RESET = 1;
             while(reset_ack != 1)
@@ -330,7 +336,7 @@ int main(int argc, char** argv)
 
 
         // Turn off error and kill countdown
-        ERROR_LED = 1;
+//        ERROR_LED = 1;
         RESET = 0;
         // Make sure that it is out of RESET = 1 state
         while(reset_ack != 0)
@@ -340,7 +346,7 @@ int main(int argc, char** argv)
 // If we make it here, we're connected!
         // Turn on the connection LED
         wait(10);
-        CONNECTED_LED = 0;
+        ledStateConnected();
         // Switch to connected state
         system_state = connected_waiting;
         break;
@@ -462,7 +468,7 @@ int main(int argc, char** argv)
 //        master_button = 0;
 
         // Turn the connected LED back on
-        CONNECTED_LED = 0;
+        ledStateConnected();
 
         if(horn_sent == 1)
         {
@@ -483,11 +489,11 @@ int main(int argc, char** argv)
         button_3_on = 0;
         button_4_on = 0;
 
-        LED0 = 1;
+//        LED0 = 1;
         wait(1000);
         break;
       case command_active:
-        LED0 = 0;
+//        LED0 = 0;
 
         /*
          * State for when the command button is pressed.
@@ -539,7 +545,7 @@ int main(int argc, char** argv)
               (button_4_on > BUTTON_ON_COUNT) &&
               (horn_sent == 0))
           {
-            CONNECTED_LED = 1;
+            ledStateOff();
             // Send command over BT
             SerialTransmit("HornOn\r\n");
 
@@ -559,7 +565,7 @@ int main(int argc, char** argv)
               (button_4_on < BUTTON_ON_COUNT) &&
               (horn_sent == 1))
           {
-            CONNECTED_LED = 0;
+            ledStateConnected();
             // Send command over BT
             SerialTransmit("HornOff\r\n");
 
@@ -584,7 +590,7 @@ int main(int argc, char** argv)
               (button_1_sent == 0)            &&
               (horn_sent == 0))
           {
-            CONNECTED_LED = 1;
+            ledStateOff();
             // Send command over BT
             SerialTransmit("LeftBlink\r\n");
 
@@ -600,7 +606,7 @@ int main(int argc, char** argv)
           // Else if the button has been off half as long as on, reset both counts
           else if((button_1_on < BUTTON_ON_COUNT) && (button_1_sent == 1))
           {
-            CONNECTED_LED = 0;
+            ledStateConnected();
             //Indicate the button_1 command is off
             button_1_sent = 0;
           }
@@ -616,7 +622,7 @@ int main(int argc, char** argv)
               (button_2_sent == 0)            &&
               (horn_sent == 0))
           {
-            CONNECTED_LED = 1;
+            ledStateOff();
             // Send command over BT
             SerialTransmit("RightBlink\r\n");
 
@@ -632,7 +638,7 @@ int main(int argc, char** argv)
           // Else if the button has been off half as long as on, reset both counts
           else if((button_2_on < BUTTON_ON_COUNT) && (button_2_sent == 1))
           {
-            CONNECTED_LED = 0;
+            ledStateConnected();
             //Indicate the button_2 command is off
             button_2_sent = 0;
           }
@@ -648,7 +654,7 @@ int main(int argc, char** argv)
               (button_3_sent == 0)            &&
               (horn_sent == 0))
           {
-            CONNECTED_LED = 1;
+            ledStateOff();
             // Send command over BT
             SerialTransmit("HeadLights\r\n");
 
@@ -664,7 +670,7 @@ int main(int argc, char** argv)
           // Else if the button has been off half as long as on, reset both counts
           else if((button_3_on < BUTTON_ON_COUNT) && (button_3_sent == 1))
           {
-            CONNECTED_LED = 0;
+            ledStateConnected();
             //Indicate the button_3 command is off
             button_3_sent = 0;
           }
@@ -681,7 +687,7 @@ int main(int argc, char** argv)
               (button_4_sent == 0)            &&
               (horn_sent == 0))
           {
-            CONNECTED_LED = 1;
+            ledStateOff();
             // Send command over BT
             SerialTransmit("Wipers\r\n");
 
@@ -697,7 +703,7 @@ int main(int argc, char** argv)
           // Else if the button has been off half as long as on, reset both counts
           else if((button_4_on < BUTTON_ON_COUNT) && (button_4_sent == 1))
           {
-            CONNECTED_LED = 0;
+            ledStateConnected();
             //Indicate the button_4 command is off
             button_4_sent = 0;
           }
@@ -781,8 +787,10 @@ void _ISR _T1Interrupt(void)
     batt_check = 1;
   }
 
-  if (battery <= LOW_VOLTAGE)
-    LOW_VOLT_LED = 0;
+  if (battery <= LOW_VOLTAGE) {
+      voltage_is_low = 1;
+      ledStateLowVoltage();
+  }
   else
     wait(10);   //    LOW_VOLT_LED = 1;
 

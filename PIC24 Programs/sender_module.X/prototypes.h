@@ -32,12 +32,20 @@ extern "C" {
 #define LED0 				PORTBbits.RB13 // port D1 
 //#define LED1 				PORTAbits.RA10 // port D2
 //#define LED2 				PORTAbits.RA7  // port D3
-//#define LED3 				PORTBbits.RB14 // port D4
-//#define LED4 				PORTBbits.RB15 // port D5 - not soldered at the moment
+//#define LED3 				PORTBbits.RB14 // port D4 - not soldered
+//#define LED4 				PORTBbits.RB15 // port D5 - not soldered
+
+#define LED_RED             PORTBbits.RB13 // port D1
+#define LED_GREEN           PORTAbits.RA10 // port D2               
+#define LED_BLUE            PORTAbits.RA7  // port D3               
+
 
 #define CONNECTED_LED		PORTAbits.RA7  // port D3
 #define LOW_VOLT_LED 		PORTBbits.RB14 // port D4
 #define ERROR_LED		PORTAbits.RA10 // port D2
+
+#define LEDON     1
+#define LEDOFF    0
 
 #define BATTERY_CHECK_GATE  PORTCbits.RC9
 #define CONNECTION_STATUS   PORTBbits.RB8
@@ -76,6 +84,7 @@ extern int wait_hold;
 extern int timer_en;
 extern char string[32];
 extern int read_index;
+extern int voltage_is_low;
 
 
 #ifdef	__cplusplus
