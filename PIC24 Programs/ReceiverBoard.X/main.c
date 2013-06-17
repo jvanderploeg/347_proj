@@ -11,6 +11,9 @@
 #include "misc.h"
 #include "timersetup.h"
 
+// Uncomment for horn/wipers test
+//#define _TEST
+
 // PIC24EP256GP204 Configuration Bit Settings
 
 #include <xc.h>
@@ -66,12 +69,23 @@ int BlinkL;
 int BlinkR;
 int Wipe;
 int received_command;
+int timer_en;
+int timer;
+int wait_hold;
+int BLcount;
+int BRcount;
+int Wipecount;
+int Wipedown;
 
 int main(int argc, char** argv) {
     HeadLights = 0;
     BlinkL = 0;
     BlinkR = 0;
     Wipe = 0;
+    Wipedown = 0;
+    BLcount = 0;
+    BRcount = 0;
+    Wipecount = 0;
 
 
     configureOscillator();
@@ -80,22 +94,29 @@ int main(int argc, char** argv) {
     configureUART2pins();
     configureT1();
     setupLEDs();
+    TRISBbits.TRISB6 = 0;
+    TRISBbits.TRISB9 = 0;
     timer2setupPWM();
 
-
-    wait(5000);
-//    char send[]  = "$$$";
-//    SerialTransmit(send1);
-//    wait(10000);
-//    char send[] = "SR,0006664FAE62\n";
-//    SerialTransmit(send2);
-
-
+    T1CONbits.TON = 1;
+    T2CONbits.TON = 1;
 
 
     system_state = connecting;
 
-
+#ifdef _TEST
+    while(1)
+    {
+        soundHorn();
+        delay(1000);
+        stopHorn();
+        delay(1000);
+        Wipers = 2200;
+        delay(1000);
+        Wipers = 1200;
+        delay(1000);
+    }
+#endif
 
     while(1){
         switch(system_state){
@@ -104,7 +125,8 @@ int main(int argc, char** argv) {
             //with the receiver board.
             case connecting:
                 while(strcmp(string,"0006664FAE62\r\n") != 0)
-                    cautionLights();
+                    headLightsOn();
+                headLightsOff();
                 clear_receive_buffer();
                 char send1[] = "0006664D63FA\r\n";
                 SerialTransmit(send1);
@@ -112,44 +134,61 @@ int main(int argc, char** argv) {
 
             //This loops forever updating the states of the car according
             //to commands sent from the sender module.
+
             case connected_waiting:
-                if(received_command == 1) {
-                    if (strcmp(string,"LeftBlink\r\n") == 0) {
+                if(received_command == 1)
+                {
+                    if (strcmp(string,"LeftBlink\r\n") == 0)
+                    {
                         if (BlinkL == 0)
                             BlinkL = 1;
                         else
                             BlinkL = 0;
                     }
 
-                    if (strcmp(string,"RightBlink\r\n") == 0) {
+                    if (strcmp(string,"RightBlink\r\n") == 0)
+                    {
                         if (BlinkR == 0)
                             BlinkR = 1;
                         else
                             BlinkR = 0;
                     }
 
-                    if (strcmp(string,"HeadLights\r\n") == 0) {
+                    if (strcmp(string,"HeadLights\r\n") == 0)
+                    {
                         HeadLights = !HeadLights;
+                        if (HeadLights == 0)
+                            headLightsOff();
+                        else
+                            headLightsOn();
                     }
                             
-                    if (strcmp(string,"Wipers\r\n") == 0) {
-                        if (Wipe == 0)
-                            Wipe++;
-                        else if (Wipe == 1)
-                            Wipe++;
-                        else if (Wipe == 2)
-                            Wipe++;
-                        else
+                    if (strcmp(string,"Wipers\r\n") == 0)
+                    {
+                        if (Wipe == 3)
                             Wipe = 0;
+                        else
+                        {
+                          if(Wipe == 1)
+                            Wipecount = Slow_Time+1;
+                          else if(Wipe == 2)
+                            Wipecount = Medium_Time+1;
+                          else if(Wipe == 3)
+                            Wipecount = Fast_Time+1;
+                          Wipe++;
+                        }
                     }
                     //If a horn command is issued immediately sound the horn.
-                    if (strcmp(string,"HornOn\r\n") == 0) {
+                    if (strcmp(string,"HornOn\r\n") == 0)
                         soundHorn();
-                        break;
-                    }
-                    if (strcmp(string,"HornOff\r\n") == 0){
+
+                    if (strcmp(string,"HornOff\r\n") == 0)
                         stopHorn();
-                        break;
+
+                    if (strcmp(string,"0006664FAE62\r\n") == 0)
+                    {
+                        char send1[] = "0006664D63FA\r\n";
+                        SerialTransmit(send1);
                     }
 
                     // clear buffer and send acknowledge
@@ -162,7 +201,6 @@ int main(int argc, char** argv) {
                    
                     
                 }
-                display_States();
                 //display_States actually implements the commands called by
                 //the sender module (LED's/PWM) according to the current
                 //gloabal variable states.
@@ -202,26 +240,165 @@ void clear_receive_buffer(void) {
 
 
 
-void display_States(void) {
 
-    if (HeadLights == 0)
-        headLightsOff();
+
+void _ISR _T1Interrupt(void)
+{
+    // Each timer "tick" is 16ms.
+    // Flip the LED to show that it's working.
+    // LED4 = !LED4;
+
+    if(BLcount > Blink_Time)
+    {
+        if(BlinkL == 1 && BlinkR == 1)
+        {
+            if(Left_Blink == 1)
+            {
+                wait(10);
+                Left_Blink = 0;
+                wait(10);
+                Right_Blink = 0;
+            }
+            else
+            {
+                wait(10);
+                Left_Blink = 1;
+                wait(10);
+                Right_Blink = 1;
+            }
+        }
+        else if(BlinkL == 1 && BlinkR == 0)
+        {
+            wait(10);
+            Left_Blink = !Left_Blink;
+            wait(10);
+            Right_Blink = 0;
+        }
+        else if(BlinkL == 0 && BlinkR == 1)
+        {
+            wait(10);
+            Right_Blink = !Right_Blink;
+            wait(10);
+            Left_Blink = 0;
+        }
+        else if(BlinkL == 0 && BlinkR == 0)
+        {
+            wait(10);
+            Left_Blink = 0;
+            wait(10);
+            Right_Blink = 0;
+        }
+        BLcount = 0;
+    }
     else
-        headLightsOn();
+        BLcount++;
 
-    if (BlinkL == 1)
-        leftBlinker();
+    if(Wipe == 0)
+    {
+        Wipers = 1200;
+        Wipedown = 1;
+        Wipecount = Slow_Time + 1;
+    }
+    else if(Wipe == 1)
+    {
+        if(Wipecount > Slow_Time)
+        {
+            if (Wipedown == 1) {
+                Wipers = 2200;
+                Wipedown = 0;
+                Wipecount = 0;
+            }
+            else {
+                Wipers = 1200;
+                Wipedown = 1;
+                Wipecount = 0;
+            }
+        }
+        else
+            Wipecount++;
+    }
+    else if(Wipe == 2)
+    {
+        if(Wipecount > Medium_Time)
+        {
+            if (Wipedown == 1) {
+                Wipers = 2200;
+                Wipedown = 0;
+                Wipecount = 0;
+            }
+            else {
+                Wipers = 1200;
+                Wipedown = 1;
+                Wipecount = 0;
+            }
+        }
+        else
+            Wipecount++;
+    }
+    else if(Wipe == 3) {
+        if(Wipecount > Fast_Time)
+        {
+            if (Wipedown == 1) {
+                Wipers = 2200;
+                Wipedown = 0;
+                Wipecount = 0;
+            }
+            else {
+                Wipers = 1200;
+                Wipedown = 1;
+                Wipecount = 0;
+            }
+        }
+        else
+            Wipecount++;
+    }
 
-    if (BlinkR == 1)
-        rightBlinker();
 
-    if (Wipe == 0)
-        wipersDown();
-    else if (Wipe == 1)
-        slowWipe();
-    else if (Wipe == 2)
-        mediumWipe();
+    if(timer_en == 1)
+    {
+        // timer variable must be set ahead of time
+        // (the delay function does this)
+        timer_en = 0;
+        wait_hold = 0;
+    }
+    else if(timer > 0)
+    {
+        timer--;
+        wait_hold = 0;
+    }
     else
-        fastWipe();
-    return;
+    {
+        timer = 0;
+        wait_hold = 1;
+    }
+
+    // Clear the interrupt flag
+    IFS0bits.T1IF = 0;
 }
+
+void delay(int wait_ms) {
+    /*
+     * Uses the timer interrupt to wait a given number of milliseconds.
+     * Must be a multiple of 16ms (which is the timer rate), or it will
+     * be rounded down to the nearest 16ms multiple.
+     *
+     * NOTE: this is not highly precise. It's pretty close, but allow a little
+     * leeway if precision of your wait times are critical
+     */
+
+    // calculate number of timer "ticks" to put on the countdown
+    timer = wait_ms/16;
+
+    // clear the "timer is done" flag
+    wait_hold = 0;
+
+    // start the countdown (see the timer interrupt to see how this works)
+    timer_en = 1;
+
+    // wait til the countdown is done
+    while(wait_hold == 0);
+
+    return;
+
+}
+

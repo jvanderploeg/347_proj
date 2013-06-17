@@ -32,6 +32,7 @@ void readADC(int* adc_buff);
 void demo_code(void);
 void clear_recieve_buffer(void);
 
+int expect_connection(int timeout_ms);
 int expect_response(char* resp, int timeout_ms);
 
 
